@@ -1,0 +1,22 @@
+# Byte-compiled files
+__pycache__/
+*.py[cod]
+
+# Environment and local files
+*.sqlite3
+/.env
+/my_env
+
+# Django media/static & migrations
+/media/
+/staticfiles/
+/static/
+/media/
+local_settings.py
+
+# Logs
+*.log
+
+# IDE files
+.idea/
+.vscode/
