@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from utils.logging_config import setup_logger, SUCCESS_ICON, ERROR_ICON, WAIT_ICON
 from langchain_openai import ChatOpenAI
+from langchain_deepseek import ChatDeepSeek
 from langchain.schema import HumanMessage, SystemMessage
 import time
 
@@ -23,6 +24,7 @@ doubao_llm = ChatOpenAI(
     stop=None,
     timeout=10,
 )
+ds_llm = model = ChatDeepSeek(model="deepseek-chat")
 
 def get_chat_completion(messages, model=None, max_retries=3, initial_retry_delay=1):
     model_name = model or os.getenv("DOUBAO_MODEL", "doubao-1-5-pro-256k-250115")
@@ -30,9 +32,16 @@ def get_chat_completion(messages, model=None, max_retries=3, initial_retry_delay
 
     # 初始化 ChatOpenAI，保持与原函数参数一致
     llm = ChatOpenAI(
-        model=model_name,
-        temperature=0,
-        max_retries=0  # 自己实现重试逻辑
+        model=os.getenv("DOUBAO_MODEL", "doubao-1-5-pro-32k-250115"),
+        openai_api_key=os.getenv("DOUBAO_API_KEY"),
+        openai_api_base=os.getenv("DOUBAO_API_BASE", "https://ark.cn-beijing.volces.com/api/v3"),
+        temperature=0.7,
+        max_tokens=4096,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0,
+        stop=None,
+        timeout=10,
     )
 
     # 将通用 message dict 转换成 LangChain 格式

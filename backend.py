@@ -1,6 +1,9 @@
 from langchain_core.messages import HumanMessage
 
 from workflow import app
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import re
 
 # Create Flask app
 flask_app = Flask(__name__)
@@ -55,6 +58,71 @@ def analyze_stock():
         final_messages = result.get("messages", [])
         
         # Prepare response
+        response_data = {
+            "ticker": ticker,
+            "status": "completed",
+            "analysis": {
+                "market_data": final_data.get("market_data", {}),
+                "financial_metrics": final_data.get("financial_metrics", {}),
+                "financial_line_items": final_data.get("financial_line_items", {}),
+                "prices": final_data.get("prices", []),
+                "start_date": final_data.get("start_date"),
+                "end_date": final_data.get("end_date"),
+            },
+            "messages": [msg.content for msg in final_messages if hasattr(msg, 'content')]
+        }
+        
+        return jsonify(response_data), 200
+        
+    except Exception as e:
+        print(f"Error during analysis: {str(e)}")
+        return jsonify({
+            'error': 'Analysis failed',
+            'message': str(e)
+        }), 500
+    
+@flask_app.route('/analyze', methods=['GET'])
+def get_analyze_stock():
+    """
+    Analyze a stock using the 6-digit ticker symbol passed as a URL parameter,
+    e.g. /analyze?ticker=000001
+    """
+    try:
+        ticker = request.args.get('ticker', None)
+        
+        if not ticker:
+            return jsonify({
+                'error': 'Missing ticker parameter',
+                'message': 'Please provide a ticker as a URL parameter, e.g. /analyze?ticker=000001'
+            }), 400
+        
+        if not re.match(r'^\d{6}$', ticker):
+            return jsonify({
+                'error': 'Invalid ticker format',
+                'message': 'Ticker must be exactly 6 digits (e.g., "000001")'
+            }), 400
+        
+        # Prepare initial state for the workflow
+        initial_state = {
+            "messages": [
+                HumanMessage(content=f"Please analyze stock with ticker {ticker}")
+            ],
+            "data": {
+                "ticker": ticker,
+                "start_date": None,  # Will be set later
+                "end_date": None,    # Will be set later
+            },
+            "metadata": {
+                "show_reasoning": True
+            }
+        }
+        
+        print(f"Starting analysis for ticker: {ticker}")
+        result = app.invoke(initial_state)
+        
+        final_data = result.get("data", {})
+        final_messages = result.get("messages", [])
+        
         response_data = {
             "ticker": ticker,
             "status": "completed",
