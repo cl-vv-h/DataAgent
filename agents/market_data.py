@@ -1,10 +1,12 @@
 from langchain_core.messages import HumanMessage
 from agents.state import AgentState, show_agent_reasoning, show_workflow_status
-from utils.api import get_financial_metrics, get_financial_statements, get_market_data, get_price_history
+from utils.api import get_financial_metrics, get_financial_statements, get_market_data, get_price_history, get_short_term_data
 from utils.logging_config import setup_logger
 
 from datetime import datetime, timedelta
 import pandas as pd
+
+import ta
 
 # 设置日志记录
 logger = setup_logger('market_data_agent')
@@ -75,7 +77,9 @@ def market_data_agent(state: AgentState):
     # 转换价格数据为字典格式
     prices_dict = prices_df.to_dict('records')
 
-    return {
+    short_term_data = get_short_term_data(ticker)
+
+    res = {
         "messages": messages,
         "data": {
             **data,
@@ -86,5 +90,28 @@ def market_data_agent(state: AgentState):
             "financial_line_items": financial_line_items,
             "market_cap": market_data.get("market_cap", 0),
             "market_data": market_data,
+            "short_term_data": short_term_data
         }
     }
+    print(res)
+    return res
+
+
+if __name__=="__main__":
+    ticker = "002518"
+    initial_state = {
+        "messages": [
+            HumanMessage(content=f"Please analyze stock with ticker {ticker}")
+        ],
+        "data": {
+            "ticker": ticker,
+            "start_date": "2024-03-01",  # Will be set later
+            "end_date": "2025-07-20",    # Will be set later
+        },
+        "metadata": {
+            "show_reasoning": True
+        }
+    }
+
+    print(f"Starting analysis for ticker: {ticker}")
+    print(market_data_agent(initial_state))

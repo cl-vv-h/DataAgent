@@ -1,4 +1,4 @@
-from langgraph.graph import END, StateGraph
+from langgraph.graph import START, END, StateGraph
 from agents.state import AgentState
 from agents.market_data import market_data_agent
 from agents.technicals import technical_analyst_agent
@@ -51,10 +51,11 @@ workflow.add_edge("researcher_bull_agent", "debate_room_agent")
 workflow.add_edge("researcher_bear_agent", "debate_room_agent")
 
 # Debate Room to Risk Management
-workflow.add_edge("debate_room_agent", "risk_management_agent")
+workflow.add_edge("debate_room_agent", "portfolio_management_agent")
 
 # Risk Management to Portfolio Management
-workflow.add_edge("risk_management_agent", "portfolio_management_agent")
+# workflow.add_edge("risk_management_agent", "portfolio_management_agent")
+# workflow.add_edge("portfolio_management_agent", END)
 workflow.add_edge("portfolio_management_agent", END)
 
 app = workflow.compile() 

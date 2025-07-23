@@ -11,7 +11,6 @@ def portfolio_management_agent(state: AgentState):
     """Responsible for portfolio management"""
     show_workflow_status("Portfolio Manager")
     show_reasoning = state["metadata"]["show_reasoning"]
-    portfolio = state["data"]["portfolio"]
 
     # Get the technical analyst, fundamentals agent, and risk management agent messages
     technical_message = next(
@@ -23,7 +22,7 @@ def portfolio_management_agent(state: AgentState):
     valuation_message = next(
         msg for msg in state["messages"] if msg.name == "valuation_agent")
     risk_message = next(
-        msg for msg in state["messages"] if msg.name == "risk_management_agent")
+        msg for msg in state["messages"] if msg.name == "risk_management_agent") if False else "N/A"
 
     # Create the system message
     system_message = {
@@ -85,12 +84,7 @@ def portfolio_management_agent(state: AgentState):
             Fundamental Analysis Trading Signal: {fundamentals_message.content}
             Sentiment Analysis Trading Signal: {sentiment_message.content}
             Valuation Analysis Trading Signal: {valuation_message.content}
-            Risk Management Trading Signal: {risk_message.content}
-
-            Here is the current portfolio:
-            Portfolio:
-            Cash: {portfolio['cash']:.2f}
-            Current Position: {portfolio['stock']} shares
+            Risk Management Trading Signal: {risk_message}
 
             Only include the action, quantity, reasoning, confidence, and agent_signals in your output as JSON.  Do not include any JSON markdown.
 

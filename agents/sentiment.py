@@ -6,6 +6,13 @@ from datetime import datetime, timedelta
 import pandas as pd
 import os
 import akshare as ak
+import sys
+import os
+current = os.path.dirname(os.path.abspath(__file__))
+parent = os.path.dirname(current)
+sys.path.insert(0, parent)
+from model import doubao_llm, ds_llm, get_chat_completion
+
 
 # 设置日志记录
 logger = setup_logger('sentiment_agent')
@@ -286,7 +293,7 @@ def get_news_sentiment(news_list: list, num_of_news: int = 5) -> float:
 
     user_message = {
         "role": "user",
-        "content": f"请分析以下A股上市公司相关新闻的情感倾向：\n\n{news_content}\n\n请直接返回一个数字，范围是-1到1，无需解释。"
+        "content": f"请分析以下A股上市公司相关新闻的情感倾向：\n\n{news_content}\n\n 除此之外你也可以自行搜索一些该公司相关新闻进行分析，请直接返回一个数字，范围是-1到1，无需解释。"
     }
 
     try:

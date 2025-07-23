@@ -4,6 +4,7 @@ import akshare as ak
 from datetime import datetime, timedelta
 import numpy as np
 from utils.logging_config import setup_logger
+import ta
 
 # 设置日志记录
 logger = setup_logger('api')
@@ -550,6 +551,56 @@ def get_price_history(symbol: str, start_date: str = None, end_date: str = None,
         logger.error(f"Error getting price history: {e}")
         print(e)
         return pd.DataFrame()
+
+def get_short_term_data(ticker, period="1", adjust="qfq"):
+    logger.info("正在获取短线数据...")
+    df = ak.stock_zh_a_minute(symbol=ticker, period=period, adjust=adjust)
+    print(df)
+
+    # 重命名列并处理格式
+    df.rename(columns={
+        "时间": "datetime", "开盘": "open", "最高": "high",
+        "最低": "low", "收盘": "close", "成交量": "volume"
+    }, inplace=True)
+
+    df['datetime'] = pd.to_datetime(df['datetime'])
+    df.set_index('datetime', inplace=True)
+    df = df.astype(float)
+
+    logger.info(f"短线数据：获取 {len(df)} 条记录")
+
+    # ========== 计算技术指标（使用 ta 库） ==========
+
+    # 添加所有指标（你可以按需精简）
+    df['ma5'] = ta.trend.sma_indicator(df['close'], window=5)
+    df['ma10'] = ta.trend.sma_indicator(df['close'], window=10)
+    df['ema12'] = ta.trend.ema_indicator(df['close'], window=12)
+    df['ema26'] = ta.trend.ema_indicator(df['close'], window=26)
+
+    macd = ta.trend.macd(df['close'])
+    df['macd'] = macd
+    df['macd_signal'] = ta.trend.macd_signal(df['close'])
+    df['macd_diff'] = ta.trend.macd_diff(df['close'])
+
+    kdj = ta.momentum.stoch(df['high'], df['low'], df['close'])
+    df['kdj_k'] = kdj
+    df['kdj_d'] = ta.momentum.stoch_signal(df['high'], df['low'], df['close'])
+    df['kdj_j'] = 3 * df['kdj_k'] - 2 * df['kdj_d']
+
+    df['rsi6'] = ta.momentum.rsi(df['close'], window=6)
+    df['rsi14'] = ta.momentum.rsi(df['close'], window=14)
+
+    boll = ta.volatility.BollingerBands(df['close'], window=20)
+    df['boll_upper'] = boll.bollinger_hband()
+    df['boll_middle'] = boll.bollinger_mavg()
+    df['boll_lower'] = boll.bollinger_lband()
+
+    df['cci'] = ta.trend.cci(df['high'], df['low'], df['close'], window=14)
+    df['obv'] = ta.volume.on_balance_volume(df['close'], df['volume'])
+    df['wr14'] = ta.momentum.williams_r(df['high'], df['low'], df['close'], lbp=14)
+    df['atr14'] = ta.volatility.average_true_range(df['high'], df['low'], df['close'], window=14)
+
+    return df
 
 
 def prices_to_df(prices):
