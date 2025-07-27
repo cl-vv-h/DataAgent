@@ -4,6 +4,7 @@ from workflow import app
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import re
+import datetime
 
 # Create Flask app
 flask_app = Flask(__name__)
@@ -88,8 +89,10 @@ def get_analyze_stock():
     e.g. /analyze?ticker=000001
     """
     try:
+        market = request.args.get('ticker', None)
         ticker = request.args.get('ticker', None)
-        
+        start_date = None
+        end_date = datetime.now().strftime("%Y%m%d")
         if not ticker:
             return jsonify({
                 'error': 'Missing ticker parameter',
@@ -105,12 +108,13 @@ def get_analyze_stock():
         # Prepare initial state for the workflow
         initial_state = {
             "messages": [
-                HumanMessage(content=f"Please analyze stock with ticker {ticker}")
+                HumanMessage(content=f"请为以下股票提供详细分析，该股票代码为： {market + ticker}")
             ],
             "data": {
+                "market": market,
                 "ticker": ticker,
-                "start_date": None,  # Will be set later
-                "end_date": None,    # Will be set later
+                "start_date": start_date,  # Will be set later
+                "end_date": end_date,    # Will be set later
             },
             "metadata": {
                 "show_reasoning": True

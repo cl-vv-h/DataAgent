@@ -39,6 +39,7 @@ def market_data_agent(state: AgentState):
         start_date = data["start_date"]
 
     # Get all required data
+    market = data["market"]
     ticker = data["ticker"]
 
     # 获取价格数据并验证
@@ -77,10 +78,16 @@ def market_data_agent(state: AgentState):
     # 转换价格数据为字典格式
     prices_dict = prices_df.to_dict('records')
 
-    short_term_data = get_short_term_data(ticker)
+    short_term_data, short_term_summary, short_term_summary_text = get_short_term_data(market, ticker)
+
+    message = HumanMessage(
+        content=short_term_summary_text,
+        name="short_term_summary",
+    )
+    messages.append(message)
 
     res = {
-        "messages": messages,
+        "messages": [message],
         "data": {
             **data,
             "prices": prices_dict,
@@ -90,10 +97,12 @@ def market_data_agent(state: AgentState):
             "financial_line_items": financial_line_items,
             "market_cap": market_data.get("market_cap", 0),
             "market_data": market_data,
-            "short_term_data": short_term_data
+            "short_term_data": short_term_data,
+            "short_term_summary": short_term_summary,
+            "short_term_summary_text": short_term_summary_text
         }
     }
-    print(res)
+
     return res
 
 

@@ -10,12 +10,14 @@ from agents.researcher_bear import researcher_bear_agent
 from agents.debate_room import debate_room_agent
 from agents.risk_manager import risk_management_agent
 from agents.portfolio_manager import portfolio_management_agent
+from agents.short_term import short_term_agent
 
 # Define the new workflow
 workflow = StateGraph(AgentState)
 
 # # Add nodes
 workflow.add_node("market_data_agent", market_data_agent)
+workflow.add_node("short_term_agent", short_term_agent)
 workflow.add_node("technical_analyst_agent", technical_analyst_agent)
 workflow.add_node("fundamentals_agent", fundamentals_agent)
 workflow.add_node("sentiment_agent", sentiment_agent)
@@ -30,6 +32,7 @@ workflow.add_node("portfolio_management_agent", portfolio_management_agent)
 workflow.set_entry_point("market_data_agent")
 
 # Market Data to Analysts
+workflow.add_edge("market_data_agent", "short_term_agent")
 workflow.add_edge("market_data_agent", "technical_analyst_agent")
 workflow.add_edge("market_data_agent", "fundamentals_agent")
 workflow.add_edge("market_data_agent", "sentiment_agent")

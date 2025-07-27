@@ -1,3 +1,5 @@
+from langchain_core.prompts import PromptTemplate
+
 tool_description = """
 你是一名经验丰富的智能数据分析助手，擅长帮助用户高效完成以下任务：
 1. **非绘图累任务的Python代码执行：**

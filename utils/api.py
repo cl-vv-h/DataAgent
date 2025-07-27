@@ -552,19 +552,20 @@ def get_price_history(symbol: str, start_date: str = None, end_date: str = None,
         print(e)
         return pd.DataFrame()
 
-def get_short_term_data(ticker, period="1", adjust="qfq"):
+def get_short_term_data(market, ticker, period="1", adjust="qfq"):
     logger.info("正在获取短线数据...")
-    df = ak.stock_zh_a_minute(symbol=ticker, period=period, adjust=adjust)
-    print(df)
+    df = ak.stock_zh_a_minute(symbol=market+ticker, period=period, adjust=adjust)
+    df = df.tail(240)
+
 
     # 重命名列并处理格式
     df.rename(columns={
-        "时间": "datetime", "开盘": "open", "最高": "high",
+        "时间": "day", "开盘": "open", "最高": "high",
         "最低": "low", "收盘": "close", "成交量": "volume"
     }, inplace=True)
 
-    df['datetime'] = pd.to_datetime(df['datetime'])
-    df.set_index('datetime', inplace=True)
+    df['day'] = pd.to_datetime(df['day'])
+    df.set_index('day', inplace=True)
     df = df.astype(float)
 
     logger.info(f"短线数据：获取 {len(df)} 条记录")
@@ -575,13 +576,15 @@ def get_short_term_data(ticker, period="1", adjust="qfq"):
     df['ma5'] = ta.trend.sma_indicator(df['close'], window=5)
     df['ma10'] = ta.trend.sma_indicator(df['close'], window=10)
     df['ema12'] = ta.trend.ema_indicator(df['close'], window=12)
-    df['ema26'] = ta.trend.ema_indicator(df['close'], window=26)
+    df['ema20'] = ta.trend.ema_indicator(df['close'], window=20)
 
     macd = ta.trend.macd(df['close'])
     df['macd'] = macd
     df['macd_signal'] = ta.trend.macd_signal(df['close'])
     df['macd_diff'] = ta.trend.macd_diff(df['close'])
+    df['cci'] = ta.trend.cci(df['high'], df['low'], df['close'], window=14)
 
+    # 动量类
     kdj = ta.momentum.stoch(df['high'], df['low'], df['close'])
     df['kdj_k'] = kdj
     df['kdj_d'] = ta.momentum.stoch_signal(df['high'], df['low'], df['close'])
@@ -590,17 +593,62 @@ def get_short_term_data(ticker, period="1", adjust="qfq"):
     df['rsi6'] = ta.momentum.rsi(df['close'], window=6)
     df['rsi14'] = ta.momentum.rsi(df['close'], window=14)
 
+    # 波动率
     boll = ta.volatility.BollingerBands(df['close'], window=20)
     df['boll_upper'] = boll.bollinger_hband()
     df['boll_middle'] = boll.bollinger_mavg()
     df['boll_lower'] = boll.bollinger_lband()
-
-    df['cci'] = ta.trend.cci(df['high'], df['low'], df['close'], window=14)
-    df['obv'] = ta.volume.on_balance_volume(df['close'], df['volume'])
-    df['wr14'] = ta.momentum.williams_r(df['high'], df['low'], df['close'], lbp=14)
     df['atr14'] = ta.volatility.average_true_range(df['high'], df['low'], df['close'], window=14)
 
-    return df
+    # 交易量
+    df['obv'] = ta.volume.on_balance_volume(df['close'], df['volume'])
+
+    summary = {
+        'macd_mean': df['macd'].mean(),
+        'macd_slope': (df['macd'].iloc[-1] - df['macd'].iloc[0]) / len(df),
+        'rsi14_mean': df['rsi14'].mean(),
+        'rsi14_std': df['rsi14'].std(),
+        'rsi14_now': df['rsi14'].iloc[-1],
+        'kdj_j_now': df['kdj_j'].iloc[-1],
+        'boll_upper': df['boll_upper'].iloc[-1],
+        'boll_lower': df['boll_lower'].iloc[-1],
+        'close_now': df['close'].iloc[-1],
+        'boll_bandwidth': df['boll_upper'].iloc[-1] - df['boll_lower'].iloc[-1],
+        'boll_position': (df['close'].iloc[-1] - df['boll_lower'].iloc[-1]) / (df['boll_upper'].iloc[-1] - df['boll_lower'].iloc[-1]),
+        'price_change_day': (df['close'].iloc[-1] - df['close'].iloc[0]) / df['close'].iloc[0],
+        'obv_now': df['obv'].iloc[-1],
+        'obv_slope': (df['obv'].iloc[-1] - df['obv'].iloc[0]) / len(df),
+    }
+
+    # ========== 构建自然语言摘要 ==========
+    summary_text = f"""
+    该股票在最近4个小时的交易时间内：
+    - MACD 平均值为 {summary['macd_mean']:.4f}，趋势斜率为 {summary['macd_slope']:.4f}；
+    - RSI14 当前值为 {summary['rsi14_now']:.2f}，{'高于' if summary['rsi14_now'] > summary['rsi14_mean'] else '低于'}平均值 {summary['rsi14_mean']:.2f}，波动幅度为 ±{summary['rsi14_std']:.2f}；
+    - KDJ 的J值为 {summary['kdj_j_now']:.2f}，提示{'超买' if summary['kdj_j_now'] > 80 else '超卖' if summary['kdj_j_now'] < 20 else '中性'}；
+    - 当前股价为 {summary['close_now']:.2f}，位于布林带的 {summary['boll_position']*100:.1f}% 区域，带宽为 {summary['boll_bandwidth']:.2f}；
+    """
+
+    # 布林带突破判断
+    if summary['close_now'] > summary['boll_upper']:
+        summary_text += "- 当前股价已突破布林带上轨，短期可能过热或存在回调风险。\n"
+    elif summary['close_now'] < summary['boll_lower']:
+        summary_text += "- 当前股价跌破布林带下轨，短期可能超跌，有反弹可能。\n"
+    else:
+        summary_text += "- 当前股价位于布林带区间内部，走势处于正常波动范围。\n"
+
+    # OBV 分析
+    if summary['obv_slope'] > 0:
+        summary_text += "- OBV 呈上升趋势，成交量配合价格上涨，量能表现积极。\n"
+    elif summary['obv_slope'] < 0:
+        summary_text += "- OBV 呈下降趋势，量能减弱，需警惕价格上涨缺乏支撑。\n"
+    else:
+        summary_text += "- OBV 基本平稳，成交量未显示明显方向性。\n"
+
+    # 今日涨跌
+    summary_text += f"- 今日开盘至今价格变动为 {summary['price_change_day']*100:.2f}%。\n"
+
+    return df, summary, summary_text
 
 
 def prices_to_df(prices):

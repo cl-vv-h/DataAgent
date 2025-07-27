@@ -7,7 +7,7 @@ from langchain.prompts import PromptTemplate
 from model import doubao_llm
 from workflow import app
 
-ticker = "sh600310"
+ticker = "600310"
 initial_state = {
     "messages": [
         HumanMessage(content=f"Please analyze stock with ticker {ticker}")

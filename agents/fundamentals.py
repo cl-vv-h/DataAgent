@@ -4,11 +4,8 @@ from agents.state import AgentState, show_agent_reasoning, show_workflow_status
 
 import json
 
-##### Fundamental Agent #####
-
 
 def fundamentals_agent(state: AgentState):
-    """Responsible for fundamental analysis"""
     show_workflow_status("Fundamentals Analyst")
     show_reasoning = state["metadata"]["show_reasoning"]
     data = state["data"]
@@ -33,19 +30,19 @@ def fundamentals_agent(state: AgentState):
         for metric, threshold in thresholds
     )
 
-    signals.append('bullish' if profitability_score >=
-                   2 else 'bearish' if profitability_score == 0 else 'neutral')
-    reasoning["profitability_signal"] = {
-        "signal": signals[0],
-        "details": (
-            f"ROE: {metrics.get('return_on_equity', 0):.2%}" if metrics.get(
-                "return_on_equity") is not None else "ROE: N/A"
+    signals.append('看涨' if profitability_score >=
+                   2 else '看跌' if profitability_score == 0 else '中立')
+    reasoning["利润层面信号"] = {
+        "结论": signals[0],
+        "论据": (
+            f"股本回报率: {metrics.get('return_on_equity', 0):.2%}，股本回报率以15%作为参考阈值" if metrics.get(
+                "return_on_equity") is not None else "股本回报率: N/A"
         ) + ", " + (
-            f"Net Margin: {metrics.get('net_margin', 0):.2%}" if metrics.get(
-                "net_margin") is not None else "Net Margin: N/A"
+            f"税后利润率: {metrics.get('net_margin', 0):.2%}，税后利润率以20%作为参考阈值" if metrics.get(
+                "net_margin") is not None else "税后利润率: N/A"
         ) + ", " + (
-            f"Op Margin: {metrics.get('operating_margin', 0):.2%}" if metrics.get(
-                "operating_margin") is not None else "Op Margin: N/A"
+            f"营业利润率: {metrics.get('operating_margin', 0):.2%}，营业利润率以15%作为参考阈值" if metrics.get(
+                "operating_margin") is not None else "营业利润率: N/A"
         )
     }
 
@@ -64,16 +61,16 @@ def fundamentals_agent(state: AgentState):
         for metric, threshold in thresholds
     )
 
-    signals.append('bullish' if growth_score >=
-                   2 else 'bearish' if growth_score == 0 else 'neutral')
-    reasoning["growth_signal"] = {
-        "signal": signals[1],
-        "details": (
-            f"Revenue Growth: {metrics.get('revenue_growth', 0):.2%}" if metrics.get(
-                "revenue_growth") is not None else "Revenue Growth: N/A"
+    signals.append('看涨' if growth_score >=
+                   2 else '看跌' if growth_score == 0 else '中立')
+    reasoning["增长层面信号"] = {
+        "结论": signals[1],
+        "论据": (
+            f"收入增长: {metrics.get('revenue_growth', 0):.2%}，收入增长以10%作为参考阈值" if metrics.get(
+                "revenue_growth") is not None else "收入增长: N/A"
         ) + ", " + (
-            f"Earnings Growth: {metrics.get('earnings_growth', 0):.2%}" if metrics.get(
-                "earnings_growth") is not None else "Earnings Growth: N/A"
+            f"盈利增长: {metrics.get('earnings_growth', 0):.2%}，收入增长以10%作为参考阈值" if metrics.get(
+                "earnings_growth") is not None else "营收增长: N/A"
         )
     }
 
@@ -92,16 +89,16 @@ def fundamentals_agent(state: AgentState):
             free_cash_flow_per_share > earnings_per_share * 0.8):  # Strong FCF conversion
         health_score += 1
 
-    signals.append('bullish' if health_score >=
-                   2 else 'bearish' if health_score == 0 else 'neutral')
-    reasoning["financial_health_signal"] = {
-        "signal": signals[2],
-        "details": (
-            f"Current Ratio: {metrics.get('current_ratio', 0):.2f}" if metrics.get(
-                "current_ratio") is not None else "Current Ratio: N/A"
+    signals.append('看涨' if health_score >=
+                   2 else '看跌' if health_score == 0 else '中立')
+    reasoning["财政层面信号"] = {
+        "结论": signals[2],
+        "论据": (
+            f"流动比率: {metrics.get('current_ratio', 0):.2f}，以1.5为参考阈值" if metrics.get(
+                "current_ratio") is not None else "流动比率: N/A"
         ) + ", " + (
-            f"D/E: {metrics.get('debt_to_equity', 0):.2f}" if metrics.get(
-                "debt_to_equity") is not None else "D/E: N/A"
+            f"债务股本比: {metrics.get('debt_to_equity', 0):.2f}，以0.5为参考阈值" if metrics.get(
+                "debt_to_equity") is not None else "债务股本比: N/A"
         )
     }
 
@@ -120,38 +117,38 @@ def fundamentals_agent(state: AgentState):
         for metric, threshold in thresholds
     )
 
-    signals.append('bullish' if price_ratio_score >=
-                   2 else 'bearish' if price_ratio_score == 0 else 'neutral')
+    signals.append('看涨' if price_ratio_score >=
+                   2 else '看跌' if price_ratio_score == 0 else '中立')
     reasoning["price_ratios_signal"] = {
-        "signal": signals[3],
-        "details": (
-            f"P/E: {pe_ratio:.2f}" if pe_ratio else "P/E: N/A"
+        "结论": signals[3],
+        "论据": (
+            f"P/E: {pe_ratio:.2f}，市盈率以25%为参考阈值" if pe_ratio else "P/E: N/A"
         ) + ", " + (
-            f"P/B: {price_to_book:.2f}" if price_to_book else "P/B: N/A"
+            f"P/B: {price_to_book:.2f}，市净率以3%为参考阈值" if price_to_book else "P/B: N/A"
         ) + ", " + (
-            f"P/S: {price_to_sales:.2f}" if price_to_sales else "P/S: N/A"
+            f"P/S: {price_to_sales:.2f}，市销率以5%为参考阈值" if price_to_sales else "P/S: N/A"
         )
     }
 
     # Determine overall signal
-    bullish_signals = signals.count('bullish')
-    bearish_signals = signals.count('bearish')
+    bullish_signals = signals.count('看涨')
+    bearish_signals = signals.count('看跌')
 
     if bullish_signals > bearish_signals:
-        overall_signal = 'bullish'
+        overall_signal = '看涨'
     elif bearish_signals > bullish_signals:
-        overall_signal = 'bearish'
+        overall_signal = '看跌'
     else:
-        overall_signal = 'neutral'
+        overall_signal = '中立'
 
     # Calculate confidence level
     total_signals = len(signals)
     confidence = max(bullish_signals, bearish_signals) / total_signals
 
     message_content = {
-        "signal": overall_signal,
-        "confidence": f"{round(confidence * 100)}%",
-        "reasoning": reasoning
+        "观点": overall_signal,
+        "置信度": f"{round(confidence * 100)}%",
+        "论据": reasoning
     }
 
     # Create the fundamental analysis message
