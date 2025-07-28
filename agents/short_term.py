@@ -23,7 +23,7 @@ def short_term_agent(state: AgentState):
             5. 综合判断：是否适合在当前时点买入、卖出或观望？
 
             请以专业、简洁、明确的语言输出分析结论，提供以下输出:
-            - "trend": "涨" | "跌" | "平",
+            - "action": "看涨" | "看跌" | "中立",
             - "confidence": <0-1之间的置信度>
             - "reasoning": <给出该结论的详细解释>
             """

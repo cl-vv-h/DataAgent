@@ -46,26 +46,26 @@ def valuation_agent(state: AgentState):
     valuation_gap = (dcf_gap + owner_earnings_gap) / 2
 
     if valuation_gap > 0.10:  # Changed from 0.15 to 0.10 (10% undervalued)
-        signal = 'bullish'
+        signal = '看涨'
     elif valuation_gap < -0.20:  # Changed from -0.15 to -0.20 (20% overvalued)
-        signal = 'bearish'
+        signal = '看跌'
     else:
-        signal = 'neutral'
+        signal = '中立'
 
     reasoning["dcf_analysis"] = {
-        "signal": "bullish" if dcf_gap > 0.10 else "bearish" if dcf_gap < -0.20 else "neutral",
-        "details": f"Intrinsic Value: ${dcf_value:,.2f}, Market Cap: ${market_cap:,.2f}, Gap: {dcf_gap:.1%}"
+        "结论": "看涨" if dcf_gap > 0.10 else "看跌" if dcf_gap < -0.20 else "中立",
+        "论据": f"实际dcf值: ${dcf_value:,.2f}, 市值: ${market_cap:,.2f}, Gap: {dcf_gap:.1%}"
     }
 
     reasoning["owner_earnings_analysis"] = {
-        "signal": "bullish" if owner_earnings_gap > 0.10 else "bearish" if owner_earnings_gap < -0.20 else "neutral",
-        "details": f"Owner Earnings Value: ${owner_earnings_value:,.2f}, Market Cap: ${market_cap:,.2f}, Gap: {owner_earnings_gap:.1%}"
+        "结论": "看涨" if owner_earnings_gap > 0.10 else "看跌" if owner_earnings_gap < -0.20 else "中立",
+        "论据": f"Owner Earnings Value: ${owner_earnings_value:,.2f}, 市值: ${market_cap:,.2f}, Gap: {owner_earnings_gap:.1%}"
     }
 
     message_content = {
-        "signal": signal,
-        "confidence": f"{abs(valuation_gap):.0%}",
-        "reasoning": reasoning
+        "结论": signal,
+        "置信度": f"{abs(valuation_gap):.0%}",
+        "论据": reasoning
     }
 
     message = HumanMessage(
