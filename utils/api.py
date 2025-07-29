@@ -687,6 +687,63 @@ def prices_to_df(prices):
         # 返回一个包含必要列的空DataFrame
         return pd.DataFrame(columns=['close', 'open', 'high', 'low', 'volume'])
 
+def get_long_term_data(market, ticker, period="1", adjust="qfq"):
+    logger.info("正在获取短线数据...")
+    today = datetime.now().strftime('%Y-%m-%d')
+    # 获取现金流
+    try:
+        cashflow = ak.stock_cash_flow_sheet_by_yearly_em(market+ticker)
+        print(cashflow.tail())
+    except Exception as e:
+        logger.error("获取现金流数据失败，请检查股票代码或网络连接")
+        print(e)
+    
+    # 获取财务指标
+    try:
+        indicator = ak.stock_financial_analysis_indicator(ticker)
+        print(indicator.tail())
+        g5 = indicator['earnings_growth'].tail(5).astype(float)
+        cagr5 = ((1 + g5/100).prod())**(1/len(g5)) - 1
+        print(indicator.tail(), g5, cagr5)
+    except Exception as e:
+        logger.error("获取财务指标数据失败，请检查股票代码或网络连接")
+        print(e)
+
+    # 获取企业价值EV/EBITDA
+    try:
+        cf_yearly = ak.stock_cash_flow_sheet_by_yearly_em(market + ticker)
+        profit_yearly = ak.stock_profit_sheet_by_yearly_em(market + ticker)
+        ebit = profit_yearly.iloc[0].get('营业利润')
+        depr_amort = cf_yearly.iloc[0].get('折旧和摊销') or 0
+        ebitda = (ebit or 0) + depr_amort
+        market_cap = indicator.iloc[0].get('market_cap')
+        balance_yearly = ak.stock_balance_sheet_by_yearly_em(ticker)
+        total_debt = balance_yearly.iloc[0].get('负债合计')
+        cash = balance_yearly.iloc[0].get('货币资金')
+        ev = (market_cap or 0) + (total_debt or 0) - (cash or 0)
+        ev_ebitda = ev / ebitda if ebitda and ev else None
+    except Exception as e:
+        logger.error("获取企业价值EV/EBITDA失败，请检查股票代码或网络连接")
+        print(e)
+        ev_ebitda = None
+
+    try:
+        hist = ak.stock_zh_a_hist(symbol=ticker, start_date="2010-01-01", end_date=today, adjust="qfq")
+        print(hist.tail()) 
+        hist['ma50'] = hist['收盘'].rolling(50).mean()
+        hist['ma200'] = hist['收盘'].rolling(200).mean()
+        hist['vol_ma50'] = hist['成交量'].rolling(50).mean()
+        vol_supporting = hist['成交量'].iloc[-1] > hist['vol_ma50'].iloc[-1]
+        # print(hist.tail()) 
+    except Exception as e:
+        logger.error("获取历史价格数据失败，请检查股票代码或网络连接")
+        print(e)
+
+    return
+
+
+
+
 
 def get_price_data(
     ticker: str,
