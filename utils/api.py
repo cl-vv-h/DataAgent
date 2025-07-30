@@ -691,6 +691,7 @@ def get_long_term_data(market, ticker, period="1", adjust="qfq"):
     logger.info("正在获取短线数据...")
     today = datetime.now().strftime('%Y-%m-%d')
     # 获取现金流
+    cashflow = None
     try:
         cashflow = ak.stock_cash_flow_sheet_by_yearly_em(market+ticker)
         print(cashflow.tail())
@@ -699,12 +700,10 @@ def get_long_term_data(market, ticker, period="1", adjust="qfq"):
         print(e)
     
     # 获取财务指标
+    eg = None
     try:
-        indicator = ak.stock_financial_analysis_indicator(ticker)
-        print(indicator.tail())
-        g5 = indicator['earnings_growth'].tail(5).astype(float)
-        cagr5 = ((1 + g5/100).prod())**(1/len(g5)) - 1
-        print(indicator.tail(), g5, cagr5)
+        indicator = ak.stock_financial_analysis_indicator(ticker, start_year="2022")
+        eg = indicator['净利润增长率(%)'].dropna()
     except Exception as e:
         logger.error("获取财务指标数据失败，请检查股票代码或网络连接")
         print(e)
