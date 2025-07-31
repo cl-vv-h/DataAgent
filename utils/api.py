@@ -650,6 +650,73 @@ def get_short_term_data(market, ticker, period="1", adjust="qfq"):
 
     return df, summary, summary_text
 
+def get_long_term_data(market, ticker, period="1", adjust="qfq"):
+    logger.info("正在获取短线数据...")
+    today = datetime.now().strftime('%Y-%m-%d')
+    # 获取现金流
+    cashflow = None
+    try:
+        cashflow = ak.stock_cash_flow_sheet_by_yearly_em(market+ticker)
+        print(cashflow.tail())
+    except Exception as e:
+        logger.error("获取现金流数据失败，请检查股票代码或网络连接")
+        print(e)
+    
+    # 获取财务指标
+    eg = None
+    try:
+        indicator = ak.stock_financial_analysis_indicator(ticker, start_year="2022")
+        eg = indicator['净利润增长率(%)'].dropna()
+    except Exception as e:
+        logger.error("获取财务指标数据失败，请检查股票代码或网络连接")
+        print(e)
+
+    # 获取企业价值EV/EBITDA
+    try:
+        profit_yearly = ak.stock_profit_sheet_by_yearly_em(stock)
+        ebit = profit_yearly.iloc[0].get('营业利润')
+        depr_amort = cf_yearly.iloc[0].get('折旧和摊销') or 0
+        ebitda = (ebit or 0) + depr_amort
+        market_cap = ind.iloc[0].get('market_cap')
+        balance_yearly = ak.stock_balance_sheet_by_yearly_em(stock)
+        total_debt = balance_yearly.iloc[0].get('负债合计')
+        cash = balance_yearly.iloc[0].get('货币资金')
+        ev = (market_cap or 0) + (total_debt or 0) - (cash or 0)
+        ev_ebitda = ev / ebitda if ebitda and ev else None
+    except Exception as e:
+        logger.error("获取企业价值EV/EBITDA失败，请检查股票代码或网络连接")
+        print(e)
+        ev_ebitda = None
+
+    try:
+        hist = ak.stock_zh_a_hist(symbol=ticker, start_date="2010-01-01", end_date=today, adjust="qfq")
+        print(hist.tail()) 
+        hist['ma50'] = hist['收盘'].rolling(50).mean()
+        hist['ma200'] = hist['收盘'].rolling(200).mean()
+        hist['vol_ma50'] = hist['成交量'].rolling(50).mean()
+        vol_supporting = hist['成交量'].iloc[-1] > hist['vol_ma50'].iloc[-1]
+        # print(hist.tail()) 
+    except Exception as e:
+        logger.error("获取历史价格数据失败，请检查股票代码或网络连接")
+        print(e)
+
+    result = {
+        "cashflow": cashflow,
+        "净利润增长率": eg,
+        "ev_ebitda": ev_ebitda,
+        # "industry_name": industry_name,
+        # "industry_index_history": ind_hist[['date','change_pct']].tail(252),  # 近一年表现
+        "ma50": hist['ma50'].iloc[-1],
+        "ma200": hist['ma200'].iloc[-1],
+        "成交量": hist['成交量'].iloc[-1],
+        "成交量>ma50": vol_supporting,
+        # 定性字段（需您补充或抓取）
+        "management": "...公司董事长/CEO 背景摘要...",
+        "strategy": "...公司战略方向摘录..."
+    }
+
+    return
+
 
 def prices_to_df(prices):
     """Convert price data to DataFrame with standardized column names"""
@@ -686,63 +753,6 @@ def prices_to_df(prices):
         logger.error(f"Error converting price data: {str(e)}")
         # 返回一个包含必要列的空DataFrame
         return pd.DataFrame(columns=['close', 'open', 'high', 'low', 'volume'])
-
-def get_long_term_data(market, ticker, period="1", adjust="qfq"):
-    logger.info("正在获取短线数据...")
-    today = datetime.now().strftime('%Y-%m-%d')
-    # 获取现金流
-    cashflow = None
-    try:
-        cashflow = ak.stock_cash_flow_sheet_by_yearly_em(market+ticker)
-        print(cashflow.tail())
-    except Exception as e:
-        logger.error("获取现金流数据失败，请检查股票代码或网络连接")
-        print(e)
-    
-    # 获取财务指标
-    eg = None
-    try:
-        indicator = ak.stock_financial_analysis_indicator(ticker, start_year="2022")
-        eg = indicator['净利润增长率(%)'].dropna()
-    except Exception as e:
-        logger.error("获取财务指标数据失败，请检查股票代码或网络连接")
-        print(e)
-
-    # 获取企业价值EV/EBITDA
-    try:
-        cf_yearly = ak.stock_cash_flow_sheet_by_yearly_em(market + ticker)
-        profit_yearly = ak.stock_profit_sheet_by_yearly_em(market + ticker)
-        ebit = profit_yearly.iloc[0].get('营业利润')
-        depr_amort = cf_yearly.iloc[0].get('折旧和摊销') or 0
-        ebitda = (ebit or 0) + depr_amort
-        market_cap = indicator.iloc[0].get('market_cap')
-        balance_yearly = ak.stock_balance_sheet_by_yearly_em(ticker)
-        total_debt = balance_yearly.iloc[0].get('负债合计')
-        cash = balance_yearly.iloc[0].get('货币资金')
-        ev = (market_cap or 0) + (total_debt or 0) - (cash or 0)
-        ev_ebitda = ev / ebitda if ebitda and ev else None
-    except Exception as e:
-        logger.error("获取企业价值EV/EBITDA失败，请检查股票代码或网络连接")
-        print(e)
-        ev_ebitda = None
-
-    try:
-        hist = ak.stock_zh_a_hist(symbol=ticker, start_date="2010-01-01", end_date=today, adjust="qfq")
-        print(hist.tail()) 
-        hist['ma50'] = hist['收盘'].rolling(50).mean()
-        hist['ma200'] = hist['收盘'].rolling(200).mean()
-        hist['vol_ma50'] = hist['成交量'].rolling(50).mean()
-        vol_supporting = hist['成交量'].iloc[-1] > hist['vol_ma50'].iloc[-1]
-        # print(hist.tail()) 
-    except Exception as e:
-        logger.error("获取历史价格数据失败，请检查股票代码或网络连接")
-        print(e)
-
-    return
-
-
-
-
 
 def get_price_data(
     ticker: str,

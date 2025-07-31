@@ -9,9 +9,12 @@ try:
     indicator = ak.stock_financial_analysis_indicator(ticker, start_year="2022")
     cf_yearly = ak.stock_cash_flow_sheet_by_yearly_em(market + ticker)
     profit_yearly = ak.stock_profit_sheet_by_yearly_em(market + ticker)
-    print(cf_yearly)
-    print(profit_yearly)
-    ebit = profit_yearly.iloc[0].get('营业利润')
+    print("现金流表列名:", cf_yearly.iloc[0].get('USERIGHT_ASSET_AMORTIZE'))
+    print("现金流表列名:", cf_yearly.iloc[0].get('IA_AMORTIZE_YOY'))
+    print("现金流表列名:", cf_yearly.iloc[0].get('LPE_AMORTIZE_YOY'))
+    print("现金流表列名:", cf_yearly.iloc[0].get('DEFER_INCOME_AMORTIZE_YOY'))
+    print("现金流表列名:", cf_yearly.iloc[0].get('USERIGHT_ASSET_AMORTIZE_YOY'))
+    ebit = profit_yearly.iloc[0].get('OPERATE_PROFIT')
     depr_amort = cf_yearly.iloc[0].get('折旧和摊销') or 0
     ebitda = (ebit or 0) + depr_amort
     market_cap = indicator.iloc[0].get('market_cap')
