@@ -650,14 +650,14 @@ def get_short_term_data(market, ticker, period="1", adjust="qfq"):
 
     return df, summary, summary_text
 
-def get_long_term_data(market, ticker, period="1", adjust="qfq"):
+def get_long_term_data(market, ticker):
     logger.info("正在获取短线数据...")
-    today = datetime.now().strftime('%Y-%m-%d')
+    today = datetime.now().strftime('%Y%m%d')
     # 获取现金流
     cashflow = None
     try:
         cashflow = ak.stock_cash_flow_sheet_by_yearly_em(market+ticker)
-        print(cashflow.tail())
+        # print(cashflow.tail())
     except Exception as e:
         logger.error("获取现金流数据失败，请检查股票代码或网络连接")
         print(e)
@@ -673,23 +673,21 @@ def get_long_term_data(market, ticker, period="1", adjust="qfq"):
 
     # 获取企业价值EV/EBITDA
     try:
-        profit_yearly = ak.stock_profit_sheet_by_yearly_em(stock)
-        ebit = profit_yearly.iloc[0].get('营业利润')
-        depr_amort = cf_yearly.iloc[0].get('折旧和摊销') or 0
-        ebitda = (ebit or 0) + depr_amort
-        market_cap = ind.iloc[0].get('market_cap')
-        balance_yearly = ak.stock_balance_sheet_by_yearly_em(stock)
-        total_debt = balance_yearly.iloc[0].get('负债合计')
-        cash = balance_yearly.iloc[0].get('货币资金')
+        profit_yearly = ak.stock_profit_sheet_by_yearly_em(market+ticker)
+        ebit = profit_yearly.iloc[0].get('OPERATE_PROFIT')
+        market_cap = ak.stock_individual_info_em(ticker).iloc[5].get('value')
+        balance_yearly = ak.stock_balance_sheet_by_yearly_em(market+ticker)
+        total_debt = balance_yearly.iloc[0].get('TOTAL_LIABILITIES')
+        cash = balance_yearly.iloc[0].get('MONETARYFUNDS')
         ev = (market_cap or 0) + (total_debt or 0) - (cash or 0)
-        ev_ebitda = ev / ebitda if ebitda and ev else None
+        ev = cap_to_Chinese(ev)
     except Exception as e:
         logger.error("获取企业价值EV/EBITDA失败，请检查股票代码或网络连接")
         print(e)
         ev_ebitda = None
 
     try:
-        hist = ak.stock_zh_a_hist(symbol=ticker, start_date="2010-01-01", end_date=today, adjust="qfq")
+        hist = ak.stock_zh_a_hist(symbol=ticker, period='monthly', start_date="20100101", end_date=today, adjust="qfq")
         print(hist.tail()) 
         hist['ma50'] = hist['收盘'].rolling(50).mean()
         hist['ma200'] = hist['收盘'].rolling(200).mean()
@@ -770,3 +768,12 @@ def get_price_data(
         包含价格数据的DataFrame
     """
     return get_price_history(ticker, start_date, end_date)
+
+
+def cap_to_Chinese(cap):
+    if cap > 1000000000000:
+        return f"{cap/1000000000000:.2f}万亿元"
+    elif cap > 1000000000:
+        return f"{cap/1000000000:.2f}亿元"
+    else:
+        return f"{cap:.2f}元"
