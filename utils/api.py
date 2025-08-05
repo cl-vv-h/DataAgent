@@ -656,8 +656,8 @@ def get_long_term_data(market, ticker):
     # 获取现金流
     cashflow = None
     try:
-        cashflow = ak.stock_cash_flow_sheet_by_yearly_em(market+ticker)
-        # print(cashflow.tail())
+        cashflow = ak.stock_cash_flow_sheet_by_yearly_em(market+ticker).iloc[0].get("END_CASH")
+        cashflow = val_to_Chinese(cashflow)
     except Exception as e:
         logger.error("获取现金流数据失败，请检查股票代码或网络连接")
         print(e)
@@ -666,7 +666,7 @@ def get_long_term_data(market, ticker):
     eg = None
     try:
         indicator = ak.stock_financial_analysis_indicator(ticker, start_year="2022")
-        eg = indicator['净利润增长率(%)'].dropna()
+        eg = indicator['净利润增长率(%)'].dropna().tolist()
     except Exception as e:
         logger.error("获取财务指标数据失败，请检查股票代码或网络连接")
         print(e)
@@ -675,45 +675,44 @@ def get_long_term_data(market, ticker):
     try:
         profit_yearly = ak.stock_profit_sheet_by_yearly_em(market+ticker)
         ebit = profit_yearly.iloc[0].get('OPERATE_PROFIT')
+        ebit = val_to_Chinese(ebit)
         market_cap = ak.stock_individual_info_em(ticker).iloc[5].get('value')
         balance_yearly = ak.stock_balance_sheet_by_yearly_em(market+ticker)
         total_debt = balance_yearly.iloc[0].get('TOTAL_LIABILITIES')
         cash = balance_yearly.iloc[0].get('MONETARYFUNDS')
         ev = (market_cap or 0) + (total_debt or 0) - (cash or 0)
-        ev = cap_to_Chinese(ev)
+        ev = val_to_Chinese(ev)
     except Exception as e:
         logger.error("获取企业价值EV/EBITDA失败，请检查股票代码或网络连接")
         print(e)
-        ev_ebitda = None
 
     try:
-        hist = ak.stock_zh_a_hist(symbol=ticker, period='monthly', start_date="20100101", end_date=today, adjust="qfq")
-        print(hist.tail()) 
-        hist['ma50'] = hist['收盘'].rolling(50).mean()
-        hist['ma200'] = hist['收盘'].rolling(200).mean()
-        hist['vol_ma50'] = hist['成交量'].rolling(50).mean()
-        vol_supporting = hist['成交量'].iloc[-1] > hist['vol_ma50'].iloc[-1]
-        # print(hist.tail()) 
+        hist = ak.stock_zh_a_hist(symbol=ticker, period='weekly', start_date="20220101", end_date=today, adjust="qfq")
+        hist['ma50'] = hist['收盘'].rolling(10).mean()
+        hist['ma200'] = hist['收盘'].rolling(40).mean()
+        hist['vol_ma50'] = hist['成交额'].rolling(50).mean()
+        vol_supporting = "放量" if hist['成交额'].iloc[-1] > hist['vol_ma50'].iloc[-1] else "缩量"
     except Exception as e:
         logger.error("获取历史价格数据失败，请检查股票代码或网络连接")
         print(e)
 
     result = {
-        "cashflow": cashflow,
-        "净利润增长率": eg,
-        "ev_ebitda": ev_ebitda,
+        "现金流": cashflow,
+        "近三年每季度净利润增长率": eg,
+        "企业价值(EV)": ev,
+        "营业利润": ebit,
         # "industry_name": industry_name,
         # "industry_index_history": ind_hist[['date','change_pct']].tail(252),  # 近一年表现
-        "ma50": hist['ma50'].iloc[-1],
-        "ma200": hist['ma200'].iloc[-1],
-        "成交量": hist['成交量'].iloc[-1],
-        "成交量>ma50": vol_supporting,
+        "ma50": val_to_Chinese(hist['ma50'].iloc[-1]),
+        "ma200": val_to_Chinese(hist['ma200'].iloc[-1]),
+        "本周成交额": val_to_Chinese(hist['成交额'].iloc[-1]),
+        "本周成交额趋势": vol_supporting,
         # 定性字段（需您补充或抓取）
         "management": "...公司董事长/CEO 背景摘要...",
         "strategy": "...公司战略方向摘录..."
     }
 
-    return
+    return result
 
 
 def prices_to_df(prices):
@@ -770,10 +769,14 @@ def get_price_data(
     return get_price_history(ticker, start_date, end_date)
 
 
-def cap_to_Chinese(cap):
+def val_to_Chinese(cap):
+    pos = cap>0
+    cap = abs(cap)
     if cap > 1000000000000:
-        return f"{cap/1000000000000:.2f}万亿元"
-    elif cap > 1000000000:
-        return f"{cap/1000000000:.2f}亿元"
+        return f"{cap/1000000000000:.2f}万亿元" if pos else f"-{cap/1000000000000:.2f}万亿元"
+    elif cap > 100000000:
+        return f"{cap/100000000:.2f}亿元" if pos else f"-{cap/100000000:.2f}亿元"
+    elif cap > 10000:
+        return f"{cap/10000:.2f}万元" if pos else f"-{cap/10000:.2f}万元"
     else:
-        return f"{cap:.2f}元"
+        return f"{cap:.2f}元" if pos else f"-{cap:.2f}元"

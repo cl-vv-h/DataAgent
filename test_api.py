@@ -7,7 +7,7 @@ market = "sh"
 ticker = "600315"
 try:
     res = get_long_term_data(market, ticker)
-    print(res.tail()) 
+    print(res) 
 except Exception as e:
     print(e)
     ev_ebitda = None
