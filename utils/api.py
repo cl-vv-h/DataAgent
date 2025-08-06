@@ -5,6 +5,11 @@ from datetime import datetime, timedelta
 import numpy as np
 from utils.logging_config import setup_logger
 import ta
+from langchain_tavily import TavilySearch, TavilyExtract
+from model import get_chat_completion
+
+from dotenv import load_dotenv
+load_dotenv(override=True)
 
 # 设置日志记录
 logger = setup_logger('api')
@@ -696,6 +701,36 @@ def get_long_term_data(market, ticker):
         logger.error("获取历史价格数据失败，请检查股票代码或网络连接")
         print(e)
 
+    
+    try:
+        search = TavilySearch(max_results=3, topic="general")
+        extract = TavilyExtract()
+        company_name = ak.stock_individual_info_em(ticker).iloc[2].get('value')
+        results = search.run(f"{company_name} 战略方向")
+        url = results["results"][0]['url']
+        print(url)
+        page_text = extract.run(url)
+        print(page_text)
+        system_message = {
+        "role": "system",
+        "content": """你是一个专业的公司战略分析师，将通过用户给你的某家公司的战略咨询，总结生成该公司的战略方向和技术指标摘要。
+        请以专业、简洁、明确的语言输出分析结论，不要回复与战略分析无关的内容。
+        """
+    }   
+        user_message = {
+            "role": "user",
+            "content": f"""以下是技术指标摘要：
+            {page_text}
+            """
+        }
+        strategy_result = get_chat_completion([system_message, user_message])
+        
+        
+    except Exception as e:
+        strategy_result = "N/A"
+        logger.error("获取公司战略信息失败，请检查股票代码或网络连接")
+        print(e)
+
     result = {
         "现金流": cashflow,
         "近三年每季度净利润增长率": eg,
@@ -709,7 +744,7 @@ def get_long_term_data(market, ticker):
         "本周成交额趋势": vol_supporting,
         # 定性字段（需您补充或抓取）
         "management": "...公司董事长/CEO 背景摘要...",
-        "strategy": "...公司战略方向摘录..."
+        "公司战略": strategy_result
     }
 
     return result
