@@ -656,13 +656,13 @@ def get_short_term_data(market, ticker, period="1", adjust="qfq"):
     return df, summary, summary_text
 
 def get_long_term_data(market, ticker):
-    logger.info("正在获取短线数据...")
+    logger.info("正在获取长线数据...")
     today = datetime.now().strftime('%Y%m%d')
     # 获取现金流
     cashflow = None
     try:
-        cashflow = ak.stock_cash_flow_sheet_by_yearly_em(market+ticker).iloc[0].get("END_CASH")
-        cashflow = val_to_Chinese(cashflow)
+        cashflow = [ak.stock_cash_flow_sheet_by_yearly_em(market+ticker).iloc[i].get("END_CASH") for i in range(2,-1,-1)]
+        cashflow = [val_to_Chinese(cash) for cash in cashflow]
     except Exception as e:
         logger.error("获取现金流数据失败，请检查股票代码或网络连接")
         print(e)
@@ -704,22 +704,20 @@ def get_long_term_data(market, ticker):
     
     try:
         search = TavilySearch(max_results=3, topic="general")
-        extract = TavilyExtract()
+        extract = TavilyExtract(extract_depth="basic",include_images=False)
         company_name = ak.stock_individual_info_em(ticker).iloc[2].get('value')
         results = search.run(f"{company_name} 战略方向")
         url = results["results"][0]['url']
-        print(url)
-        page_text = extract.run(url)
-        print(page_text)
+        page_text = extract.invoke({"urls": [url]})["results"][0]["raw_content"]
         system_message = {
         "role": "system",
-        "content": """你是一个专业的公司战略分析师，将通过用户给你的某家公司的战略咨询，总结生成该公司的战略方向和技术指标摘要。
-        请以专业、简洁、明确的语言输出分析结论，不要回复与战略分析无关的内容。
+        "content": """你是一个专业的公司战略分析师，通过用户给你的某家公司的战略信息，并结合当下社会发展趋势和发展热点，总结概括出该公司的战略方向和发展前景，切记在分析发展前景时保持批判性思维，从多方面考虑。
+        请以专业、简洁、明确的语言输出分析结论，不要回复与战略分析、发展前景无关的内容。
         """
     }   
         user_message = {
             "role": "user",
-            "content": f"""以下是技术指标摘要：
+            "content": f"""以下是该公司（{company_name}）的战略方向相关内容：
             {page_text}
             """
         }
@@ -732,7 +730,7 @@ def get_long_term_data(market, ticker):
         print(e)
 
     result = {
-        "现金流": cashflow,
+        "近三年现金流": cashflow,
         "近三年每季度净利润增长率": eg,
         "企业价值(EV)": ev,
         "营业利润": ebit,
@@ -743,7 +741,7 @@ def get_long_term_data(market, ticker):
         "本周成交额": val_to_Chinese(hist['成交额'].iloc[-1]),
         "本周成交额趋势": vol_supporting,
         # 定性字段（需您补充或抓取）
-        "management": "...公司董事长/CEO 背景摘要...",
+        # "management": "...公司董事长/CEO 背景摘要...",
         "公司战略": strategy_result
     }
 
