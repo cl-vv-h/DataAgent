@@ -681,7 +681,7 @@ def get_long_term_data(market, ticker):
         profit_yearly = ak.stock_profit_sheet_by_yearly_em(market+ticker)
         ebit = profit_yearly.iloc[0].get('OPERATE_PROFIT')
         ebit = val_to_Chinese(ebit)
-        market_cap = ak.stock_individual_info_em(ticker).iloc[5].get('value')
+        market_cap = get_market_cap_3y(ticker)
         balance_yearly = ak.stock_balance_sheet_by_yearly_em(market+ticker)
         total_debt = balance_yearly.iloc[0].get('TOTAL_LIABILITIES')
         cash = balance_yearly.iloc[0].get('MONETARYFUNDS')
@@ -702,32 +702,31 @@ def get_long_term_data(market, ticker):
         print(e)
 
     
-    try:
-        search = TavilySearch(max_results=3, topic="general")
-        extract = TavilyExtract(extract_depth="basic",include_images=False)
-        company_name = ak.stock_individual_info_em(ticker).iloc[2].get('value')
-        results = search.run(f"{company_name} 战略方向")
-        url = results["results"][0]['url']
-        page_text = extract.invoke({"urls": [url]})["results"][0]["raw_content"]
-        system_message = {
-        "role": "system",
-        "content": """你是一个专业的公司战略分析师，通过用户给你的某家公司的战略信息，并结合当下社会发展趋势和发展热点，总结概括出该公司的战略方向和发展前景，切记在分析发展前景时保持批判性思维，从多方面考虑。
-        请以专业、简洁、明确的语言输出分析结论，不要回复与战略分析、发展前景无关的内容。
-        """
-    }   
-        user_message = {
-            "role": "user",
-            "content": f"""以下是该公司（{company_name}）的战略方向相关内容：
-            {page_text}
-            """
-        }
-        strategy_result = get_chat_completion([system_message, user_message])
+    # try:
+    #     search = TavilySearch(max_results=3, topic="general")
+    #     extract = TavilyExtract(extract_depth="basic",include_images=False)
+    #     company_name = ak.stock_individual_info_em(ticker).iloc[2].get('value')
+    #     results = search.run(f"{company_name} 战略方向")
+    #     url = results["results"][0]['url']
+    #     page_text = extract.invoke({"urls": [url]})["results"][0]["raw_content"]
+    #     system_message = {
+    #     "role": "system",
+    #     "content": """你是一个专业的公司战略分析师，通过用户给你的某家公司的战略信息，并结合当下社会发展趋势和发展热点，总结概括出该公司的战略方向和发展前景，切记在分析发展前景时保持批判性思维，从多方面考虑。
+    #     请以专业、简洁、明确的语言输出分析结论，不要回复与战略分析、发展前景无关的内容。
+    #     """
+    # }   
+    #     user_message = {
+    #         "role": "user",
+    #         "content": f"""以下是该公司（{company_name}）的战略方向相关内容：
+    #         {page_text}
+    #         """
+    #     }
+    #     strategy_result = get_chat_completion([system_message, user_message])
         
-        
-    except Exception as e:
-        strategy_result = "N/A"
-        logger.error("获取公司战略信息失败，请检查股票代码或网络连接")
-        print(e)
+    # except Exception as e:
+    #     strategy_result = "N/A"
+    #     logger.error("获取公司战略信息失败，请检查股票代码或网络连接")
+    #     print(e)
 
     result = {
         "近三年现金流": cashflow,
@@ -813,3 +812,19 @@ def val_to_Chinese(cap):
         return f"{cap/10000:.2f}万元" if pos else f"-{cap/10000:.2f}万元"
     else:
         return f"{cap:.2f}元" if pos else f"-{cap:.2f}元"
+
+
+def get_market_cap_3y(ticker):
+    """获取股票近三年市值数据"""
+    market_caps = []
+    df = ak.stock_zh_a_gdhs_detail_em(ticker)
+
+    for i in range(0, 3):
+        try:
+            market_cap = df.iloc[5*i].get("总市值")
+            market_caps.append(val_to_Chinese(market_cap))
+            market_caps.append(market_cap)
+        except Exception as e:
+            logger.error(f"Error getting market cap for {ticker} at index {i}: {e}")
+            market_caps.append("N/A")
+    return market_caps
