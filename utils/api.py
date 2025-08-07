@@ -662,7 +662,7 @@ def get_long_term_data(market, ticker):
     cashflow = None
     try:
         cashflow = [ak.stock_cash_flow_sheet_by_yearly_em(market+ticker).iloc[i].get("END_CASH") for i in range(2,-1,-1)]
-        cashflow = [val_to_Chinese(cash) for cash in cashflow]
+        cashflowCh = [val_to_Chinese(cash) for cash in cashflow]
     except Exception as e:
         logger.error("获取现金流数据失败，请检查股票代码或网络连接")
         print(e)
@@ -679,14 +679,12 @@ def get_long_term_data(market, ticker):
     # 获取企业价值EV/EBITDA
     try:
         profit_yearly = ak.stock_profit_sheet_by_yearly_em(market+ticker)
-        ebit = profit_yearly.iloc[0].get('OPERATE_PROFIT')
-        ebit = val_to_Chinese(ebit)
-        market_cap = get_market_cap_3y(ticker)
-        balance_yearly = ak.stock_balance_sheet_by_yearly_em(market+ticker)
-        total_debt = balance_yearly.iloc[0].get('TOTAL_LIABILITIES')
-        cash = balance_yearly.iloc[0].get('MONETARYFUNDS')
-        ev = (market_cap or 0) + (total_debt or 0) - (cash or 0)
-        ev = val_to_Chinese(ev)
+        ebit = [val_to_Chinese(ebit) for ebit in get_ebit_3y(profit_yearly)]
+        market_caps = get_market_cap_3y(ticker)
+        total_debt = get_debt_3y(market, ticker)
+        cash = cashflow
+        ev = [(market_caps[i] or 0) + (total_debt[i] or 0) - (cash[i] or 0) for i in range(3)]
+        ev = [val_to_Chinese(v) for v in ev]
     except Exception as e:
         logger.error("获取企业价值EV/EBITDA失败，请检查股票代码或网络连接")
         print(e)
@@ -729,10 +727,10 @@ def get_long_term_data(market, ticker):
     #     print(e)
 
     result = {
-        "近三年现金流": cashflow,
+        "近三年现金流": cashflowCh,
         "近三年每季度净利润增长率": eg,
-        "企业价值(EV)": ev,
-        "营业利润": ebit,
+        "近三年企业价值(EV)": ev,
+        "近三年营业利润": ebit,
         # "industry_name": industry_name,
         # "industry_index_history": ind_hist[['date','change_pct']].tail(252),  # 近一年表现
         "ma50": val_to_Chinese(hist['ma50'].iloc[-1]),
@@ -741,7 +739,7 @@ def get_long_term_data(market, ticker):
         "本周成交额趋势": vol_supporting,
         # 定性字段（需您补充或抓取）
         # "management": "...公司董事长/CEO 背景摘要...",
-        "公司战略": strategy_result
+        # "公司战略": strategy_result
     }
 
     return result
@@ -822,9 +820,31 @@ def get_market_cap_3y(ticker):
     for i in range(0, 3):
         try:
             market_cap = df.iloc[5*i].get("总市值")
-            market_caps.append(val_to_Chinese(market_cap))
             market_caps.append(market_cap)
         except Exception as e:
             logger.error(f"Error getting market cap for {ticker} at index {i}: {e}")
             market_caps.append("N/A")
     return market_caps
+
+def get_debt_3y(market, ticker):
+    df = ak.stock_balance_sheet_by_yearly_em(market+ticker)
+    debts = []
+    for i in range(2,-1,-1):
+        try:
+            debt = df.iloc[i].get("TOTAL_LIABILITIES")
+            debts.append(debt)
+        except Exception as e:
+            logger.error(f"Error getting debt for {ticker} at index {i}: {e}")
+            debts.append("N/A")
+    return debts
+
+def get_ebit_3y(profit_yearly):
+    ebits = []
+    for i in range(2,-1,-1):
+        try:
+            ebit = profit_yearly.iloc[i].get("OPERATE_PROFIT")
+            ebits.append(ebit)
+        except Exception as e:
+            logger.error(f"Error getting ebit at index {i}: {e}")
+            ebits.append("N/A")
+    return ebits

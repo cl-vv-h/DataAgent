@@ -6,10 +6,9 @@ import akshare as ak
 market = "sh"
 ticker = "600315"
 try:
-    # res = get_long_term_data(market, ticker)
-    # print(ak.stock_financial_analysis_indicator_em(symbol="301389.SZ", indicator="按报告期").column.tolist())
-    # print(res) 
-    print(get_market_cap_3y(ticker))
+    res = get_long_term_data(market, ticker)
+    
+    print(res) 
 except Exception as e:
     print(e)
     ev_ebitda = None
