@@ -15,54 +15,202 @@ load_dotenv(override=True)
 logger = setup_logger('api')
 
 
+# def get_financial_metrics(symbol: str) -> Dict[str, Any]:
+#     """获取财务指标数据"""
+#     logger.info(f"Getting financial indicators for {symbol}...")
+#     try:
+#         # 获取实时行情数据（用于市值和估值比率）
+#         logger.info("Fetching real-time quotes...")
+#         realtime_data = ak.stock_zh_a_spot_em()
+#         if realtime_data is None or realtime_data.empty:
+#             logger.warning("No real-time quotes data available")
+#             return [{}]
+
+#         stock_data = realtime_data[realtime_data['代码'] == symbol]
+#         if stock_data.empty:
+#             logger.warning(f"No real-time quotes found for {symbol}")
+#             return [{}]
+
+#         stock_data = stock_data.iloc[0]
+#         logger.info("✓ Real-time quotes fetched")
+
+#         # 获取新浪财务指标
+#         logger.info("Fetching Sina financial indicators...")
+#         current_year = datetime.now().year
+#         financial_data = ak.stock_financial_analysis_indicator(
+#             symbol=symbol, start_year=str(current_year-1))
+#         if financial_data is None or financial_data.empty:
+#             logger.warning("No financial indicator data available")
+#             return [{}]
+
+#         # 按日期排序并获取最新的数据
+#         financial_data['日期'] = pd.to_datetime(financial_data['日期'])
+#         financial_data = financial_data.sort_values('日期', ascending=False)
+#         latest_financial = financial_data.iloc[0] if not financial_data.empty else pd.Series(
+#         )
+#         logger.info(
+#             f"✓ Financial indicators fetched ({len(financial_data)} records)")
+#         logger.info(f"Latest data date: {latest_financial.get('日期')}")
+
+#         # 获取利润表数据（用于计算 price_to_sales）
+#         logger.info("Fetching income statement...")
+#         try:
+#             income_statement = ak.stock_financial_report_sina(
+#                 stock=f"sh{symbol}", symbol="利润表")
+#             if not income_statement.empty:
+#                 latest_income = income_statement.iloc[0]
+#                 logger.info("✓ Income statement fetched")
+#             else:
+#                 logger.warning("Failed to get income statement")
+#                 logger.error("No income statement data found")
+#                 latest_income = pd.Series()
+#         except Exception as e:
+#             logger.warning("Failed to get income statement")
+#             logger.error(f"Error getting income statement: {e}")
+#             latest_income = pd.Series()
+
+#         # 构建完整指标数据
+#         logger.info("Building indicators...")
+#         try:
+#             def convert_percentage(value: float) -> float:
+#                 """将百分比值转换为小数"""
+#                 try:
+#                     return float(value) / 100.0 if value is not None else 0.0
+#                 except:
+#                     return 0.0
+
+#             all_metrics = {
+#                 # 市场数据
+#                 "market_cap": float(stock_data.get("总市值", 0)),
+#                 "float_market_cap": float(stock_data.get("流通市值", 0)),
+
+#                 # 盈利数据
+#                 "revenue": float(latest_income.get("营业总收入", 0)),
+#                 "net_income": float(latest_income.get("净利润", 0)),
+#                 "return_on_equity": convert_percentage(latest_financial.get("净资产收益率(%)", 0)),
+#                 "net_margin": convert_percentage(latest_financial.get("销售净利率(%)", 0)),
+#                 "operating_margin": convert_percentage(latest_financial.get("营业利润率(%)", 0)),
+
+#                 # 增长指标
+#                 "revenue_growth": convert_percentage(latest_financial.get("主营业务收入增长率(%)", 0)),
+#                 "earnings_growth": convert_percentage(latest_financial.get("净利润增长率(%)", 0)),
+#                 "book_value_growth": convert_percentage(latest_financial.get("净资产增长率(%)", 0)),
+
+#                 # 财务健康指标
+#                 "current_ratio": float(latest_financial.get("流动比率", 0)),
+#                 "debt_to_equity": convert_percentage(latest_financial.get("资产负债率(%)", 0)),
+#                 "free_cash_flow_per_share": float(latest_financial.get("每股经营性现金流(元)", 0)),
+#                 "earnings_per_share": float(latest_financial.get("加权每股收益(元)", 0)),
+
+#                 # 估值比率
+#                 "pe_ratio": float(stock_data.get("市盈率-动态", 0)),
+#                 "price_to_book": float(stock_data.get("市净率", 0)),
+#                 "price_to_sales": float(stock_data.get("总市值", 0)) / float(latest_income.get("营业总收入", 1)) if float(latest_income.get("营业总收入", 0)) > 0 else 0,
+#             }
+
+#             # 只返回 agent 需要的指标
+#             agent_metrics = {
+#                 # 盈利能力指标
+#                 "return_on_equity": all_metrics["return_on_equity"],
+#                 "net_margin": all_metrics["net_margin"],
+#                 "operating_margin": all_metrics["operating_margin"],
+
+#                 # 增长指标
+#                 "revenue_growth": all_metrics["revenue_growth"],
+#                 "earnings_growth": all_metrics["earnings_growth"],
+#                 "book_value_growth": all_metrics["book_value_growth"],
+
+#                 # 财务健康指标
+#                 "current_ratio": all_metrics["current_ratio"],
+#                 "debt_to_equity": all_metrics["debt_to_equity"],
+#                 "free_cash_flow_per_share": all_metrics["free_cash_flow_per_share"],
+#                 "earnings_per_share": all_metrics["earnings_per_share"],
+
+#                 # 估值比率
+#                 "pe_ratio": all_metrics["pe_ratio"],
+#                 "price_to_book": all_metrics["price_to_book"],
+#                 "price_to_sales": all_metrics["price_to_sales"],
+#             }
+
+#             logger.info("✓ Indicators built successfully")
+
+#             # 打印所有获取到的指标数据（用于调试）
+#             logger.debug("\n获取到的完整指标数据：")
+#             for key, value in all_metrics.items():
+#                 logger.debug(f"{key}: {value}")
+
+#             logger.debug("\n传递给 agent 的指标数据：")
+#             for key, value in agent_metrics.items():
+#                 logger.debug(f"{key}: {value}")
+
+#             return [agent_metrics]
+
+#         except Exception as e:
+#             logger.error(f"Error building indicators: {e}")
+#             return [{}]
+
+#     except Exception as e:
+#         logger.error(f"Error getting financial indicators: {e}")
+#         return [{}]
+
 def get_financial_metrics(symbol: str) -> Dict[str, Any]:
-    """获取财务指标数据"""
+    """获取财务指标数据（支持周末运行）"""
     logger.info(f"Getting financial indicators for {symbol}...")
     try:
-        # 获取实时行情数据（用于市值和估值比率）
-        logger.info("Fetching real-time quotes...")
-        realtime_data = ak.stock_zh_a_spot_em()
-        if realtime_data is None or realtime_data.empty:
-            logger.warning("No real-time quotes data available")
+        # 获取静态市值和估值数据
+        logger.info("Fetching static market indicators...")
+        try:
+            lg_data = ak.stock_a_indicator_lg(symbol=symbol)
+            if lg_data is None or lg_data.empty:
+                logger.warning("No static market indicators available")
+                return [{}]
+            stock_data = lg_data.iloc[0]
+            logger.info("✓ Static market indicators fetched")
+        except Exception as e:
+            logger.error(f"Error fetching static market indicators: {e}")
             return [{}]
 
-        stock_data = realtime_data[realtime_data['代码'] == symbol]
-        if stock_data.empty:
-            logger.warning(f"No real-time quotes found for {symbol}")
-            return [{}]
-
-        stock_data = stock_data.iloc[0]
-        logger.info("✓ Real-time quotes fetched")
+        # 如果缺失市值数据，尝试用最近交易日数据计算
+        if pd.isna(stock_data.get("总市值")) or stock_data.get("总市值", 0) == 0:
+            logger.info("Static market cap missing, fetching latest daily data...")
+            try:
+                daily_df = ak.stock_zh_a_daily(symbol=symbol, adjust="qfq")
+                if not daily_df.empty:
+                    latest_close = daily_df.iloc[-1]["close"]
+                    total_shares = float(stock_data.get("总股本", 0)) * 1e8  # 亿股转股
+                    stock_data["总市值"] = latest_close * total_shares
+                    logger.info("✓ Market cap calculated from latest close price")
+            except Exception as e:
+                logger.warning(f"Failed to fetch daily data: {e}")
 
         # 获取新浪财务指标
         logger.info("Fetching Sina financial indicators...")
         current_year = datetime.now().year
         financial_data = ak.stock_financial_analysis_indicator(
-            symbol=symbol, start_year=str(current_year-1))
+            symbol=symbol, start_year=str(current_year - 1)
+        )
         if financial_data is None or financial_data.empty:
             logger.warning("No financial indicator data available")
             return [{}]
 
-        # 按日期排序并获取最新的数据
-        financial_data['日期'] = pd.to_datetime(financial_data['日期'])
-        financial_data = financial_data.sort_values('日期', ascending=False)
-        latest_financial = financial_data.iloc[0] if not financial_data.empty else pd.Series(
-        )
-        logger.info(
-            f"✓ Financial indicators fetched ({len(financial_data)} records)")
+        # 按日期排序并获取最新数据
+        financial_data["日期"] = pd.to_datetime(financial_data["日期"])
+        financial_data = financial_data.sort_values("日期", ascending=False)
+        latest_financial = financial_data.iloc[0] if not financial_data.empty else pd.Series()
+        logger.info(f"✓ Financial indicators fetched ({len(financial_data)} records)")
         logger.info(f"Latest data date: {latest_financial.get('日期')}")
 
         # 获取利润表数据（用于计算 price_to_sales）
         logger.info("Fetching income statement...")
         try:
             income_statement = ak.stock_financial_report_sina(
-                stock=f"sh{symbol}", symbol="利润表")
+                stock=f"sh{symbol}", symbol="利润表"
+            )
             if not income_statement.empty:
                 latest_income = income_statement.iloc[0]
                 logger.info("✓ Income statement fetched")
             else:
-                logger.warning("Failed to get income statement")
-                logger.error("No income statement data found")
+                logger.warning("No income statement data found")
                 latest_income = pd.Series()
         except Exception as e:
             logger.warning("Failed to get income statement")
@@ -103,30 +251,23 @@ def get_financial_metrics(symbol: str) -> Dict[str, Any]:
                 "earnings_per_share": float(latest_financial.get("加权每股收益(元)", 0)),
 
                 # 估值比率
-                "pe_ratio": float(stock_data.get("市盈率-动态", 0)),
+                "pe_ratio": float(stock_data.get("市盈率(动态)", stock_data.get("市盈率-动态", 0))),
                 "price_to_book": float(stock_data.get("市净率", 0)),
                 "price_to_sales": float(stock_data.get("总市值", 0)) / float(latest_income.get("营业总收入", 1)) if float(latest_income.get("营业总收入", 0)) > 0 else 0,
             }
 
             # 只返回 agent 需要的指标
             agent_metrics = {
-                # 盈利能力指标
                 "return_on_equity": all_metrics["return_on_equity"],
                 "net_margin": all_metrics["net_margin"],
                 "operating_margin": all_metrics["operating_margin"],
-
-                # 增长指标
                 "revenue_growth": all_metrics["revenue_growth"],
                 "earnings_growth": all_metrics["earnings_growth"],
                 "book_value_growth": all_metrics["book_value_growth"],
-
-                # 财务健康指标
                 "current_ratio": all_metrics["current_ratio"],
                 "debt_to_equity": all_metrics["debt_to_equity"],
                 "free_cash_flow_per_share": all_metrics["free_cash_flow_per_share"],
                 "earnings_per_share": all_metrics["earnings_per_share"],
-
-                # 估值比率
                 "pe_ratio": all_metrics["pe_ratio"],
                 "price_to_book": all_metrics["price_to_book"],
                 "price_to_sales": all_metrics["price_to_sales"],
@@ -134,7 +275,6 @@ def get_financial_metrics(symbol: str) -> Dict[str, Any]:
 
             logger.info("✓ Indicators built successfully")
 
-            # 打印所有获取到的指标数据（用于调试）
             logger.debug("\n获取到的完整指标数据：")
             for key, value in all_metrics.items():
                 logger.debug(f"{key}: {value}")
@@ -152,7 +292,6 @@ def get_financial_metrics(symbol: str) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Error getting financial indicators: {e}")
         return [{}]
-
 
 def get_financial_statements(symbol: str) -> Dict[str, Any]:
     """获取财务报表数据"""
@@ -284,20 +423,50 @@ def get_financial_statements(symbol: str) -> Dict[str, Any]:
         return [default_item, default_item]
 
 
-def get_market_data(symbol: str) -> Dict[str, Any]:
-    """获取市场数据"""
+def get_market_data(symbol: str, market:str = "sh") -> Dict[str, Any]:
+    """获取市场数据，支持周末和节假日"""
     try:
-        # 获取实时行情
-        realtime_data = ak.stock_zh_a_spot_em()
-        stock_data = realtime_data[realtime_data['代码'] == symbol].iloc[0]
+        # 尝试获取实时行情
+        try:
+            realtime_data = ak.stock_zh_a_spot_em()
+            stock_data = realtime_data[realtime_data['代码'] == symbol]
+            if not stock_data.empty:
+                stock_data = stock_data.iloc[0]
+                return {
+                    "market_cap": float(stock_data.get("总市值", 0)),
+                    "volume": float(stock_data.get("成交量", 0)),
+                    "average_volume": float(stock_data.get("成交量", 0)),
+                    "fifty_two_week_high": float(stock_data.get("52周最高", 0)),
+                    "fifty_two_week_low": float(stock_data.get("52周最低", 0))
+                }
+        except Exception:
+            logger.warn("暂无实时行情数据")
+        df = ak.stock_zh_a_gdhs_detail_em(symbol)
+
+        market_cap = df.iloc[0].get("总市值")
+        # 获取最近交易日数据（防止周末或节假日无数据）
+        # 今天日期
+        today = datetime.today()
+        # 去年今日
+        last_year_today = today.replace(year=today.year - 1)
+        # 转换为 YYMMDD 格式
+        today_str = today.strftime("%Y%m%d")
+        last_year_today_str = last_year_today.strftime("%Y%m%d")
+        hist_df = ak.stock_zh_a_daily(symbol=market+symbol,start_date=last_year_today_str, end_date=today_str, adjust="qfq")
+        hist_df = hist_df.sort_index(ascending=False)  # 最近交易日排最前
+        last_row = hist_df.iloc[0]
+
+        # 计算52周高低
+        hist_52w = hist_df.head(52 * 5)  # 假设每周5个交易日
+        fifty_two_week_high = hist_52w['high'].max()
+        fifty_two_week_low = hist_52w['low'].min()
 
         return {
-            "market_cap": float(stock_data.get("总市值", 0)),
-            "volume": float(stock_data.get("成交量", 0)),
-            # A股没有平均成交量，暂用当日成交量
-            "average_volume": float(stock_data.get("成交量", 0)),
-            "fifty_two_week_high": float(stock_data.get("52周最高", 0)),
-            "fifty_two_week_low": float(stock_data.get("52周最低", 0))
+            "market_cap": market_cap,  # 历史数据中无总市值，可另行获取
+            "volume": float(last_row["volume"]),
+            "average_volume": float(hist_df["volume"].tail(20).mean()),  # 近20日均量
+            "fifty_two_week_high": float(fifty_two_week_high),
+            "fifty_two_week_low": float(fifty_two_week_low)
         }
 
     except Exception as e:
@@ -700,46 +869,44 @@ def get_long_term_data(market, ticker):
         print(e)
 
     
-    # try:
-    #     search = TavilySearch(max_results=3, topic="general")
-    #     extract = TavilyExtract(extract_depth="basic",include_images=False)
-    #     company_name = ak.stock_individual_info_em(ticker).iloc[2].get('value')
-    #     results = search.run(f"{company_name} 战略方向")
-    #     url = results["results"][0]['url']
-    #     page_text = extract.invoke({"urls": [url]})["results"][0]["raw_content"]
-    #     system_message = {
-    #     "role": "system",
-    #     "content": """你是一个专业的公司战略分析师，通过用户给你的某家公司的战略信息，并结合当下社会发展趋势和发展热点，总结概括出该公司的战略方向和发展前景，切记在分析发展前景时保持批判性思维，从多方面考虑。
-    #     请以专业、简洁、明确的语言输出分析结论，不要回复与战略分析、发展前景无关的内容。
-    #     """
-    # }   
-    #     user_message = {
-    #         "role": "user",
-    #         "content": f"""以下是该公司（{company_name}）的战略方向相关内容：
-    #         {page_text}
-    #         """
-    #     }
-    #     strategy_result = get_chat_completion([system_message, user_message])
+    try:
+        search = TavilySearch(max_results=3, topic="general")
+        extract = TavilyExtract(extract_depth="basic",include_images=False)
+        company_name = ak.stock_individual_info_em(ticker).iloc[2].get('value')
+        results = search.run(f"{company_name} 战略方向")
+        url = results["results"][0]['url']
+        page_text = extract.invoke({"urls": [url]})["results"][0]["raw_content"]
+        system_message = {
+        "role": "system",
+        "content": """你是一个专业的公司战略分析师，通过用户给你的某家公司的战略信息，并结合当下社会发展趋势和发展热点，总结概括出该公司的战略方向和发展前景，切记在分析发展前景时保持批判性思维，从多方面考虑。
+        请以专业、简洁、明确的语言输出分析结论，不要回复与战略分析、发展前景无关的内容。
+        """
+    }   
+        user_message = {
+            "role": "user",
+            "content": f"""以下是该公司（{company_name}）的战略方向相关内容：
+            {page_text}
+            """
+        }
+        strategy_result = get_chat_completion([system_message, user_message])
         
-    # except Exception as e:
-    #     strategy_result = "N/A"
-    #     logger.error("获取公司战略信息失败，请检查股票代码或网络连接")
-    #     print(e)
+    except Exception as e:
+        strategy_result = "N/A"
+        logger.error("获取公司战略信息失败，请检查股票代码或网络连接")
+        print(e)
 
     result = {
         "近三年现金流": cashflowCh,
         "近三年每季度净利润增长率": eg,
         "近三年企业价值(EV)": ev,
         "近三年营业利润": ebit,
-        # "industry_name": industry_name,
-        # "industry_index_history": ind_hist[['date','change_pct']].tail(252),  # 近一年表现
         "ma50": val_to_Chinese(hist['ma50'].iloc[-1]),
         "ma200": val_to_Chinese(hist['ma200'].iloc[-1]),
         "本周成交额": val_to_Chinese(hist['成交额'].iloc[-1]),
         "本周成交额趋势": vol_supporting,
         # 定性字段（需您补充或抓取）
         # "management": "...公司董事长/CEO 背景摘要...",
-        # "公司战略": strategy_result
+        "公司战略": strategy_result
     }
 
     return result

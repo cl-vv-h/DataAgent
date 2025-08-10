@@ -35,7 +35,7 @@ def researcher_bull_agent(state: AgentState):
     confidence_scores = []
 
     # Technical Analysis
-    if technical_signals["signal"] == "bullish":
+    if technical_signals["signal"] == "看涨":
         bullish_points.append(
             f"Technical indicators show bullish momentum with {technical_signals['confidence']} confidence")
         confidence_scores.append(
@@ -46,7 +46,7 @@ def researcher_bull_agent(state: AgentState):
         confidence_scores.append(0.3)
 
     # Fundamental Analysis
-    if fundamental_signals["signal"] == "bullish":
+    if fundamental_signals["signal"] == "看涨":
         bullish_points.append(
             f"Strong fundamentals with {fundamental_signals['confidence']} confidence")
         confidence_scores.append(
@@ -57,7 +57,7 @@ def researcher_bull_agent(state: AgentState):
         confidence_scores.append(0.3)
 
     # Sentiment Analysis
-    if sentiment_signals["signal"] == "bullish":
+    if sentiment_signals["signal"] == "看涨":
         bullish_points.append(
             f"Positive market sentiment with {sentiment_signals['confidence']} confidence")
         confidence_scores.append(
@@ -68,7 +68,7 @@ def researcher_bull_agent(state: AgentState):
         confidence_scores.append(0.3)
 
     # Valuation Analysis
-    if valuation_signals["signal"] == "bullish":
+    if valuation_signals["signal"] == "看涨":
         bullish_points.append(
             f"Stock appears undervalued with {valuation_signals['confidence']} confidence")
         confidence_scores.append(
@@ -82,7 +82,7 @@ def researcher_bull_agent(state: AgentState):
     avg_confidence = sum(confidence_scores) / len(confidence_scores)
 
     message_content = {
-        "perspective": "bullish",
+        "perspective": "看涨",
         "confidence": avg_confidence,
         "thesis_points": bullish_points,
         "reasoning": "Bullish thesis based on comprehensive analysis of technical, fundamental, sentiment, and valuation factors"

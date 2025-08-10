@@ -35,7 +35,7 @@ def researcher_bear_agent(state: AgentState):
     confidence_scores = []
 
     # Technical Analysis
-    if technical_signals["signal"] == "bearish":
+    if technical_signals["signal"] == "看跌":
         bearish_points.append(
             f"Technical indicators show bearish momentum with {technical_signals['confidence']} confidence")
         confidence_scores.append(
@@ -46,7 +46,7 @@ def researcher_bear_agent(state: AgentState):
         confidence_scores.append(0.3)
 
     # Fundamental Analysis
-    if fundamental_signals["signal"] == "bearish":
+    if fundamental_signals["signal"] == "看跌":
         bearish_points.append(
             f"Concerning fundamentals with {fundamental_signals['confidence']} confidence")
         confidence_scores.append(
@@ -57,7 +57,7 @@ def researcher_bear_agent(state: AgentState):
         confidence_scores.append(0.3)
 
     # Sentiment Analysis
-    if sentiment_signals["signal"] == "bearish":
+    if sentiment_signals["signal"] == "看跌":
         bearish_points.append(
             f"Negative market sentiment with {sentiment_signals['confidence']} confidence")
         confidence_scores.append(
@@ -68,7 +68,7 @@ def researcher_bear_agent(state: AgentState):
         confidence_scores.append(0.3)
 
     # Valuation Analysis
-    if valuation_signals["signal"] == "bearish":
+    if valuation_signals["signal"] == "看跌":
         bearish_points.append(
             f"Stock appears overvalued with {valuation_signals['confidence']} confidence")
         confidence_scores.append(
@@ -82,14 +82,14 @@ def researcher_bear_agent(state: AgentState):
     avg_confidence = sum(confidence_scores) / len(confidence_scores)
 
     message_content = {
-        "perspective": "bearish",
+        "perspective": "看跌",
         "confidence": avg_confidence,
         "thesis_points": bearish_points,
         "reasoning": "Bearish thesis based on comprehensive analysis of technical, fundamental, sentiment, and valuation factors"
     }
 
     message = HumanMessage(
-        content=json.dumps(message_content),
+        content=json.dumps(message_content, ensure_ascii=False),
         name="researcher_bear_agent",
     )
 

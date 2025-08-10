@@ -1,6 +1,6 @@
 from langchain_core.messages import HumanMessage
 from agents.state import AgentState, show_agent_reasoning, show_workflow_status
-from utils.api import get_financial_metrics, get_financial_statements, get_market_data, get_price_history, get_short_term_data
+from utils.api import get_financial_metrics, get_financial_statements, get_market_data, get_price_history, get_short_term_data, get_long_term_data
 from utils.logging_config import setup_logger
 
 from datetime import datetime, timedelta
@@ -65,7 +65,7 @@ def market_data_agent(state: AgentState):
 
     # 获取市场数据
     try:
-        market_data = get_market_data(ticker)
+        market_data = get_market_data(ticker, market)
     except Exception as e:
         logger.error(f"获取市场数据失败: {str(e)}")
         market_data = {"market_cap": 0}
@@ -80,14 +80,10 @@ def market_data_agent(state: AgentState):
 
     short_term_data, short_term_summary, short_term_summary_text = get_short_term_data(market, ticker)
 
-    message = HumanMessage(
-        content=short_term_summary_text,
-        name="short_term_summary",
-    )
-    messages.append(message)
+    long_term_data = get_long_term_data(market, ticker)
 
     res = {
-        "messages": [message],
+        "messages": [],
         "data": {
             **data,
             "prices": prices_dict,
@@ -99,7 +95,8 @@ def market_data_agent(state: AgentState):
             "market_data": market_data,
             "short_term_data": short_term_data,
             "short_term_summary": short_term_summary,
-            "short_term_summary_text": short_term_summary_text
+            "short_term_summary_text": short_term_summary_text,
+            "long_term_data": long_term_data
         }
     }
 
@@ -108,11 +105,13 @@ def market_data_agent(state: AgentState):
 
 if __name__=="__main__":
     ticker = "002518"
+    market = "sz"
     initial_state = {
         "messages": [
             HumanMessage(content=f"Please analyze stock with ticker {ticker}")
         ],
         "data": {
+            "market": market,
             "ticker": ticker,
             "start_date": "2024-03-01",  # Will be set later
             "end_date": "2025-07-20",    # Will be set later

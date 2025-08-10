@@ -9,8 +9,8 @@ def short_term_agent(state: AgentState):
     show_workflow_status("Short Term Analysis")
     show_reasoning = state["metadata"]["show_reasoning"]
 
-    data = AgentState["data"]
-    messages = AgentState["messages"]
+    data = state["data"]
+    messages = state["messages"]
     # Create the system message
     system_message = {
         "role": "system",
@@ -43,10 +43,10 @@ def short_term_agent(state: AgentState):
     # 如果API调用失败，使用默认的保守决策
     if result is None:
         result = json.dumps({
-            "action": "hold",
+            "action": "中立",
             "confidence": 0.5,
             "reasoning": "短线分析失败，无法提供相应建议，因此保持现状"
-        })
+        }, ensure_ascii=False)
 
     # Create the portfolio management message
     message = HumanMessage(

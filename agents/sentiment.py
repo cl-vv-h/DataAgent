@@ -40,20 +40,20 @@ def sentiment_agent(state: AgentState):
 
     # 根据情感分数生成交易信号和置信度
     if sentiment_score >= 0.5:
-        signal = "bullish"
+        signal = "看涨"
         confidence = str(round(abs(sentiment_score) * 100)) + "%"
     elif sentiment_score <= -0.5:
-        signal = "bearish"
+        signal = "看跌"
         confidence = str(round(abs(sentiment_score) * 100)) + "%"
     else:
-        signal = "neutral"
+        signal = "中立"
         confidence = str(round((1 - abs(sentiment_score)) * 100)) + "%"
 
     # 生成分析结果
     message_content = {
         "signal": signal,
         "confidence": confidence,
-        "reasoning": f"Based on {len(recent_news)} recent news articles, sentiment score: {sentiment_score:.2f}"
+        "reasoning": f"根据 {len(recent_news)} 条近期新闻分析，市场情绪分数为: {sentiment_score:.2f}"
     }
 
     # 如果需要显示推理过程
@@ -62,7 +62,7 @@ def sentiment_agent(state: AgentState):
 
     # 创建消息
     message = HumanMessage(
-        content=json.dumps(message_content),
+        content=json.dumps(message_content, ensure_ascii=False),
         name="sentiment_agent",
     )
 

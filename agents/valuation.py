@@ -53,23 +53,23 @@ def valuation_agent(state: AgentState):
         signal = '中立'
 
     reasoning["dcf_analysis"] = {
-        "结论": "看涨" if dcf_gap > 0.10 else "看跌" if dcf_gap < -0.20 else "中立",
-        "论据": f"实际dcf值: ${dcf_value:,.2f}, 市值: ${market_cap:,.2f}, Gap: {dcf_gap:.1%}"
+        "signal": "看涨" if dcf_gap > 0.10 else "看跌" if dcf_gap < -0.20 else "中立",
+        "reasoning": f"实际dcf值: ${dcf_value:,.2f}, 市值: ${market_cap:,.2f}, Gap: {dcf_gap:.1%}"
     }
 
     reasoning["owner_earnings_analysis"] = {
-        "结论": "看涨" if owner_earnings_gap > 0.10 else "看跌" if owner_earnings_gap < -0.20 else "中立",
-        "论据": f"Owner Earnings Value: ${owner_earnings_value:,.2f}, 市值: ${market_cap:,.2f}, Gap: {owner_earnings_gap:.1%}"
+        "signal": "看涨" if owner_earnings_gap > 0.10 else "看跌" if owner_earnings_gap < -0.20 else "中立",
+        "reasoning": f"Owner Earnings Value: ${owner_earnings_value:,.2f}, 市值: ${market_cap:,.2f}, Gap: {owner_earnings_gap:.1%}"
     }
 
     message_content = {
-        "结论": signal,
-        "置信度": f"{abs(valuation_gap):.0%}",
-        "论据": reasoning
+        "signal": signal,
+        "confidence": f"{abs(valuation_gap):.0%}",
+        "reasoning": reasoning
     }
 
     message = HumanMessage(
-        content=json.dumps(message_content),
+        content=json.dumps(message_content,ensure_ascii=False),
         name="valuation_agent",
     )
 

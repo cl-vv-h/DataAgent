@@ -13,6 +13,10 @@ def portfolio_management_agent(state: AgentState):
     show_reasoning = state["metadata"]["show_reasoning"]
 
     # Get the technical analyst, fundamentals agent, and risk management agent messages
+    short_term_message = next(
+        msg for msg in state["messages"] if msg.name == "short_term_analysis")
+    long_term_message = next(
+        msg for msg in state["messages"] if msg.name == "long_term_analysis")
     technical_message = next(
         msg for msg in state["messages"] if msg.name == "technical_analyst_agent")
     fundamentals_message = next(
@@ -27,70 +31,60 @@ def portfolio_management_agent(state: AgentState):
     # Create the system message
     system_message = {
         "role": "system",
-        "content": """You are a portfolio manager making final trading decisions.
-            Your job is to make a trading decision based on the team's analysis while strictly adhering
-            to risk management constraints.
+        "content": """你是一名投资组合经理，负责做出最终的交易决策。
+        你的工作是基于团队的分析做出短线及长线的交易决策
 
-            RISK MANAGEMENT CONSTRAINTS:
-            - You MUST NOT exceed the max_position_size specified by the risk manager
-            - You MUST follow the trading_action (buy/sell/hold) recommended by risk management
-            - These are hard constraints that cannot be overridden by other signals
+        
 
-            When weighing the different signals for direction and timing:
-            1. Valuation Analysis (35% weight)
-               - Primary driver of fair value assessment
-               - Determines if price offers good entry/exit point
-            
-            2. Fundamental Analysis (30% weight)
-               - Business quality and growth assessment
-               - Determines conviction in long-term potential
-            
-            3. Technical Analysis (25% weight)
-               - Secondary confirmation
-               - Helps with entry/exit timing
-            
-            4. Sentiment Analysis (10% weight)
-               - Final consideration
-               - Can influence sizing within risk limits
-            
-            The decision process should be:
-            1. First check risk management constraints
-            2. Then evaluate valuation signal
-            3. Then evaluate fundamentals signal
-            4. Use technical analysis for timing
-            5. Consider sentiment for final adjustment
-            
-            Provide the following in your output:
-            - "action": "buy" | "sell" | "hold",
-            - "quantity": <positive integer>
-            - "confidence": <float between 0 and 1>
-            - "agent_signals": <list of agent signals including agent name, signal (bullish | bearish | neutral), and their confidence>
-            - "reasoning": <concise explanation of the decision including how you weighted the signals>
+        在权衡不同方向和时机的信号时：
+        1. 估值分析（权重 35%）
+           - 公允价值评估的主要驱动因素
+           - 判断当前价格是否是良好的买入/卖出时机
+       
+        2. 基本面分析（权重 30%）
+           - 评估业务质量和增长潜力
+           - 决定对长期潜力的信心
+       
+        3. 技术分析（权重 25%）
+           - 次要确认信号
+           - 帮助确定买入/卖出的时机
+       
+        4. 市场情绪分析（权重 10%）
+           - 最终参考因素
+           - 可在风险范围内影响仓位规模
+       
+        决策流程应为：
+        1. 首先检查风险管理约束
+        2. 然后评估估值信号
+        3. 接着评估基本面信号
+        4. 使用技术分析确定时机
+        5. 最后考虑市场情绪做最终调整
+       
+        输出中需包含以下内容：
+        - "action": "看涨" | "看跌" | "中立"
+        - "confidence": <0 到 1 之间的小数>
+        - "agent_signals": <代理信号列表，包含代理名称、信号（看涨 | 看跌 | 中立）及其置信度>
+        - "reasoning": <简洁说明你的决策及信号权重的理由>
 
-            Trading Rules:
-            - Never exceed risk management position limits
-            - Only buy if you have available cash
-            - Only sell if you have shares to sell
-            - Quantity must be ≤ current position for sells
-            - Quantity must be ≤ max_position_size from risk management"""
+        """
     }
 
     # Create the user message
     user_message = {
         "role": "user",
-        "content": f"""Based on the team's analysis below, make your trading decision.
+    "content": f"""基于以下团队分析，做出你的交易决策。
+        短线分析交易信号：{short_term_message.content}
+        长线分析交易信号：{long_term_message.content}
+        技术分析交易信号: {technical_message.content}
+        基本面分析交易信号: {fundamentals_message.content}
+        市场情绪分析交易信号: {sentiment_message.content}
+        估值分析交易信号: {valuation_message.content}
+        风险管理交易信号: {risk_message}
 
-            Technical Analysis Trading Signal: {technical_message.content}
-            Fundamental Analysis Trading Signal: {fundamentals_message.content}
-            Sentiment Analysis Trading Signal: {sentiment_message.content}
-            Valuation Analysis Trading Signal: {valuation_message.content}
-            Risk Management Trading Signal: {risk_message}
+        输出中仅包含 action、reasoning、confidence、agent_signals，并以 JSON 格式输出。不要包含任何 JSON 代码块标记。
 
-            Only include the action, quantity, reasoning, confidence, and agent_signals in your output as JSON.  Do not include any JSON markdown.
-
-            Remember, the action must be either buy, sell, or hold.
-            You can only buy if you have available cash.
-            You can only sell if you have shares in the portfolio to sell."""
+        记住，action 必须是 看涨、看跌 或 中立。
+        """
     }
 
     # Get the completion from OpenRouter
@@ -99,38 +93,33 @@ def portfolio_management_agent(state: AgentState):
     # 如果API调用失败，使用默认的保守决策
     if result is None:
         result = json.dumps({
-            "action": "hold",
+            "action": "中立",
             "quantity": 0,
             "confidence": 0.7,
             "agent_signals": [
                 {
                     "agent_name": "technical_analysis",
-                    "signal": "neutral",
+                    "signal": "中立",
                     "confidence": 0.0
                 },
                 {
                     "agent_name": "fundamental_analysis",
-                    "signal": "bullish",
+                    "signal": "中立",
                     "confidence": 1.0
                 },
                 {
                     "agent_name": "sentiment_analysis",
-                    "signal": "bullish",
+                    "signal": "中立",
                     "confidence": 0.6
                 },
                 {
                     "agent_name": "valuation_analysis",
-                    "signal": "bearish",
+                    "signal": "中立",
                     "confidence": 0.67
-                },
-                {
-                    "agent_name": "risk_management",
-                    "signal": "hold",
-                    "confidence": 1.0
                 }
             ],
             "reasoning": "API error occurred. Following risk management signal to hold. This is a conservative decision based on the mixed signals: bullish fundamentals and sentiment vs bearish valuation, with neutral technicals."
-        })
+        }, ensure_ascii=False)
 
     # Create the portfolio management message
     message = HumanMessage(

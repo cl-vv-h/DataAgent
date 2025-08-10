@@ -49,37 +49,37 @@ def technical_analyst_agent(state: AgentState):
 
     # MACD signal
     if macd_line.iloc[-2] < signal_line.iloc[-2] and macd_line.iloc[-1] > signal_line.iloc[-1]:
-        signals.append('bullish')
+        signals.append('看涨')
     elif macd_line.iloc[-2] > signal_line.iloc[-2] and macd_line.iloc[-1] < signal_line.iloc[-1]:
-        signals.append('bearish')
+        signals.append('看跌')
     else:
-        signals.append('neutral')
+        signals.append('中立')
 
     # RSI signal
     if rsi.iloc[-1] < 30:
-        signals.append('bullish')
+        signals.append('看涨')
     elif rsi.iloc[-1] > 70:
-        signals.append('bearish')
+        signals.append('看跌')
     else:
-        signals.append('neutral')
+        signals.append('中立')
 
     # Bollinger Bands signal
     current_price = prices_df['close'].iloc[-1]
     if current_price < lower_band.iloc[-1]:
-        signals.append('bullish')
+        signals.append('看涨')
     elif current_price > upper_band.iloc[-1]:
-        signals.append('bearish')
+        signals.append('看跌')
     else:
-        signals.append('neutral')
+        signals.append('中立')
 
     # OBV signal
     obv_slope = obv.diff().iloc[-5:].mean()
     if obv_slope > 0:
-        signals.append('bullish')
+        signals.append('看涨')
     elif obv_slope < 0:
-        signals.append('bearish')
+        signals.append('看跌')
     else:
-        signals.append('neutral')
+        signals.append('中立')
 
     # Calculate price drop
     price_drop = (prices_df['close'].iloc[-1] -
@@ -87,25 +87,25 @@ def technical_analyst_agent(state: AgentState):
 
     # Add price drop signal
     if price_drop < -0.05 and rsi.iloc[-1] < 40:  # 5% drop and RSI below 40
-        signals.append('bullish')
+        signals.append('看涨')
         confidence += 0.2  # Increase confidence for oversold conditions
     elif price_drop < -0.03 and rsi.iloc[-1] < 45:  # 3% drop and RSI below 45
-        signals.append('bullish')
+        signals.append('看涨')
         confidence += 0.1
 
     # Add reasoning collection
     reasoning = {
         "MACD": {
             "signal": signals[0],
-            "details": f"MACD Line crossed {'above' if signals[0] == 'bullish' else 'below' if signals[0] == 'bearish' else 'neither above nor below'} Signal Line"
+            "details": f"MACD 释放 {'买入' if signals[0] == '看涨' else '卖出' if signals[0] == '看跌' else 'hold'} 信号"
         },
         "RSI": {
             "signal": signals[1],
-            "details": f"RSI is {rsi.iloc[-1]:.2f} ({'oversold' if signals[1] == 'bullish' else 'overbought' if signals[1] == 'bearish' else 'neutral'})"
+            "details": f"RSI is {rsi.iloc[-1]:.2f} ({'oversold' if signals[1] == '看涨' else 'overbought' if signals[1] == '看跌' else '中立'})"
         },
         "Bollinger": {
             "signal": signals[2],
-            "details": f"Price is {'below lower band' if signals[2] == 'bullish' else 'above upper band' if signals[2] == 'bearish' else 'within bands'}"
+            "details": f"当前价格 {'低于市场预期' if signals[2] == '看涨' else '高于市场预期' if signals[2] == '看跌' else '适中'}"
         },
         "OBV": {
             "signal": signals[3],
@@ -114,15 +114,15 @@ def technical_analyst_agent(state: AgentState):
     }
 
     # Determine overall signal
-    bullish_signals = signals.count('bullish')
-    bearish_signals = signals.count('bearish')
+    bullish_signals = signals.count('看涨')
+    bearish_signals = signals.count('看跌')
 
     if bullish_signals > bearish_signals:
-        overall_signal = 'bullish'
+        overall_signal = '看涨'
     elif bearish_signals > bullish_signals:
-        overall_signal = 'bearish'
+        overall_signal = '看跌'
     else:
-        overall_signal = 'neutral'
+        overall_signal = '中立'
 
     # Calculate confidence level based on the proportion of indicators agreeing
     total_signals = len(signals)
@@ -207,7 +207,7 @@ def technical_analyst_agent(state: AgentState):
 
     # Create the technical analyst message
     message = HumanMessage(
-        content=json.dumps(analysis_report),
+        content=json.dumps(analysis_report, ensure_ascii=False),
         name="technical_analyst_agent",
     )
 
@@ -244,13 +244,13 @@ def calculate_trend_signals(prices_df):
     trend_strength = adx['adx'].iloc[-1] / 100.0
 
     if short_trend.iloc[-1] and medium_trend.iloc[-1]:
-        signal = 'bullish'
+        signal = '看涨'
         confidence = trend_strength
     elif not short_trend.iloc[-1] and not medium_trend.iloc[-1]:
-        signal = 'bearish'
+        signal = '看跌'
         confidence = trend_strength
     else:
-        signal = 'neutral'
+        signal = '中立'
         confidence = 0.5
 
     return {
@@ -287,13 +287,13 @@ def calculate_mean_reversion_signals(prices_df):
 
     # Combine signals
     if z_score.iloc[-1] < -2 and price_vs_bb < 0.2:
-        signal = 'bullish'
+        signal = '看涨'
         confidence = min(abs(z_score.iloc[-1]) / 4, 1.0)
     elif z_score.iloc[-1] > 2 and price_vs_bb > 0.8:
-        signal = 'bearish'
+        signal = '看跌'
         confidence = min(abs(z_score.iloc[-1]) / 4, 1.0)
     else:
-        signal = 'neutral'
+        signal = '中立'
         confidence = 0.5
 
     return {
@@ -338,13 +338,13 @@ def calculate_momentum_signals(prices_df):
     volume_confirmation = volume_momentum.iloc[-1] > 1.0
 
     if momentum_score > 0.05 and volume_confirmation:
-        signal = 'bullish'
+        signal = '看涨'
         confidence = min(abs(momentum_score) * 5, 1.0)
     elif momentum_score < -0.05 and volume_confirmation:
-        signal = 'bearish'
+        signal = '看跌'
         confidence = min(abs(momentum_score) * 5, 1.0)
     else:
-        signal = 'neutral'
+        signal = '中立'
         confidence = 0.5
 
     return {
@@ -391,13 +391,13 @@ def calculate_volatility_signals(prices_df):
     vol_z = vol_z_score.iloc[-1]
 
     if current_vol_regime < 0.8 and vol_z < -1:
-        signal = 'bullish'  # Low vol regime, potential for expansion
+        signal = '看涨'  # Low vol regime, potential for expansion
         confidence = min(abs(vol_z) / 3, 1.0)
     elif current_vol_regime > 1.2 and vol_z > 1:
-        signal = 'bearish'  # High vol regime, potential for contraction
+        signal = '看跌'  # High vol regime, potential for contraction
         confidence = min(abs(vol_z) / 3, 1.0)
     else:
-        signal = 'neutral'
+        signal = '中立'
         confidence = 0.5
 
     return {
@@ -434,13 +434,13 @@ def calculate_stat_arb_signals(prices_df):
 
     # Generate signal based on statistical properties
     if hurst < 0.4 and skew.iloc[-1] > 1:
-        signal = 'bullish'
+        signal = '看涨'
         confidence = (0.5 - hurst) * 2
     elif hurst < 0.4 and skew.iloc[-1] < -1:
-        signal = 'bearish'
+        signal = '看跌'
         confidence = (0.5 - hurst) * 2
     else:
-        signal = 'neutral'
+        signal = '中立'
         confidence = 0.5
 
     return {
@@ -460,9 +460,9 @@ def weighted_signal_combination(signals, weights):
     """
     # Convert signals to numeric values
     signal_values = {
-        'bullish': 1,
-        'neutral': 0,
-        'bearish': -1
+        '看涨': 1,
+        '中立': 0,
+        '看跌': -1
     }
 
     weighted_sum = 0
@@ -484,11 +484,11 @@ def weighted_signal_combination(signals, weights):
 
     # Convert back to signal
     if final_score > 0.2:
-        signal = 'bullish'
+        signal = '看涨'
     elif final_score < -0.2:
-        signal = 'bearish'
+        signal = '看跌'
     else:
-        signal = 'neutral'
+        signal = '中立'
 
     return {
         'signal': signal,

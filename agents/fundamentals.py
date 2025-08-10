@@ -146,14 +146,14 @@ def fundamentals_agent(state: AgentState):
     confidence = max(bullish_signals, bearish_signals) / total_signals
 
     message_content = {
-        "观点": overall_signal,
-        "置信度": f"{round(confidence * 100)}%",
-        "论据": reasoning
+        "signal": overall_signal,
+        "confidence": f"{round(confidence * 100)}%",
+        "reasoning": reasoning
     }
 
     # Create the fundamental analysis message
     message = HumanMessage(
-        content=json.dumps(message_content),
+        content=json.dumps(message_content, ensure_ascii=False),
         name="fundamentals_agent",
     )
 

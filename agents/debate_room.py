@@ -28,27 +28,27 @@ def debate_room_agent(state: AgentState):
 
     # Analyze debate points
     debate_summary = []
-    debate_summary.append("Bullish Arguments:")
+    debate_summary.append("看涨依据:")
     for point in bull_thesis["thesis_points"]:
         debate_summary.append(f"+ {point}")
 
-    debate_summary.append("\nBearish Arguments:")
+    debate_summary.append("\n看跌依据:")
     for point in bear_thesis["thesis_points"]:
         debate_summary.append(f"- {point}")
 
     # Determine final recommendation
     confidence_diff = bull_confidence - bear_confidence
     if abs(confidence_diff) < 0.1:  # Close debate
-        final_signal = "neutral"
-        reasoning = "Balanced debate with strong arguments on both sides"
+        final_signal = "中立"
+        reasoning = "无明显涨跌趋势"
         confidence = max(bull_confidence, bear_confidence)
     elif confidence_diff > 0:  # Bull wins
-        final_signal = "bullish"
-        reasoning = "Bullish arguments more convincing"
+        final_signal = "看涨"
+        reasoning = "看涨的依据更令人信服"
         confidence = bull_confidence
     else:  # Bear wins
-        final_signal = "bearish"
-        reasoning = "Bearish arguments more convincing"
+        final_signal = "看跌"
+        reasoning = "看跌的依据更令人信服"
         confidence = bear_confidence
 
     message_content = {
@@ -61,7 +61,7 @@ def debate_room_agent(state: AgentState):
     }
 
     message = HumanMessage(
-        content=json.dumps(message_content),
+        content=json.dumps(message_content, ensure_ascii=False),
         name="debate_room_agent",
     )
 

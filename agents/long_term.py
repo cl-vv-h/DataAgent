@@ -6,20 +6,21 @@ import json
 from agents.state import AgentState, show_agent_reasoning, show_workflow_status
 
 def long_term_agent(state: AgentState):
-    show_workflow_status("Short Term Analysis")
+    show_workflow_status("Long Term Analysis")
     show_reasoning = state["metadata"]["show_reasoning"]
 
-    data = AgentState["data"]
-    messages = AgentState["messages"]
+    data = state["data"]
+    messages = state["messages"]
     # Create the system message
     system_message = {
         "role": "system",
         "content": """你是一个经验丰富的长线股票分析师，擅长结合财务、估值、技术趋势以及公司战略进行整体判断。
 
             ## 提供给你的信息包括：
-            - 经营现金流（Operating Cash Flow）
+            - 近三年经营现金流（Operating Cash Flow）
             - 近三年每季度净利润增长率（以百分比表示）
-            - 企业价值（EV）与营业利润（Income）
+            - 近三年企业价值(EV)
+            - 近三年营业利润（Income）
             - ma50、ma200（长期趋势均线）
             - 本周成交额，以及成交额相较于历史均值的“放量”或“缩量”情况
             - 公司战略概要（由提取工具提供的战略方向或关键战略要点）
@@ -38,12 +39,11 @@ def long_term_agent(state: AgentState):
             - "reasoning": <给出该结论的详细解释>
             """
     }
-
     # Create the user message
     user_message = {
         "role": "user",
         "content": f"""以下是技术指标摘要：
-        {data["long_term_summary_text"]}
+        {data["long_term_data"]}
         """
     }
 
@@ -53,10 +53,10 @@ def long_term_agent(state: AgentState):
     # 如果API调用失败，使用默认的保守决策
     if result is None:
         result = json.dumps({
-            "action": "hold",
+            "action": "中立",
             "confidence": 0.5,
-            "reasoning": "短线分析失败，无法提供相应建议，因此保持现状"
-        })
+            "reasoning": "长分析失败，无法提供相应建议，因此保持现状"
+        }, ensure_ascii=False)
 
     # Create the portfolio management message
     message = HumanMessage(
