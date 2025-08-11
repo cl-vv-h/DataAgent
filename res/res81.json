@@ -1,1 +1,19 @@
-"{\"signal\": \"\u770b\u8dcc\", \"confidence\": 0.4, \"bull_confidence\": 0.3, \"bear_confidence\": 0.4, \"debate_summary\": [\"\u770b\u6da8\u4f9d\u636e:\", \"+ Technical indicators may be conservative, presenting buying opportunities\", \"+ Company fundamentals show potential for improvement\", \"+ Market sentiment may be overly pessimistic, creating value opportunities\", \"+ Current valuation may not fully reflect growth potential\", \"\\n\u770b\u8dcc\u4f9d\u636e:\", \"- Technical rally may be temporary, suggesting potential reversal\", \"- Concerning fundamentals with 50% confidence\", \"- Negative market sentiment with 50% confidence\", \"- Current valuation may not fully reflect downside risks\"], \"reasoning\": \"\u770b\u8dcc\u7684\u4f9d\u636e\u66f4\u4ee4\u4eba\u4fe1\u670d\"}"
+{
+    "signal": "看跌",
+    "confidence": 0.4,
+    "bull_confidence": 0.3,
+    "bear_confidence": 0.4,
+    "debate_summary": [
+        "看涨依据:",
+        "+ Technical indicators may be conservative, presenting buying opportunities",
+        "+ Company fundamentals show potential for improvement",
+        "+ Market sentiment may be overly pessimistic, creating value opportunities",
+        "+ Current valuation may not fully reflect growth potential",
+        "\n看跌依据:",
+        "- Technical rally may be temporary, suggesting potential reversal",
+        "- Concerning fundamentals with 50% confidence",
+        "- Negative market sentiment with 50% confidence",
+        "- Current valuation may not fully reflect downside risks"
+    ],
+    "reasoning": "看跌的依据更令人信服"
+}

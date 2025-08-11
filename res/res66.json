@@ -1,1 +1,14 @@
-"{\"signal\": \"\u4e2d\u7acb\", \"confidence\": \"nan%\", \"reasoning\": {\"dcf_analysis\": {\"signal\": \"\u4e2d\u7acb\", \"reasoning\": \"\u5b9e\u9645dcf\u503c: $nan, \u5e02\u503c: $3,490,451,250.00, Gap: nan%\"}, \"owner_earnings_analysis\": {\"signal\": \"\u770b\u8dcc\", \"reasoning\": \"Owner Earnings Value: $0.00, \u5e02\u503c: $3,490,451,250.00, Gap: -100.0%\"}}}"
+{
+    "signal": "中立",
+    "confidence": "nan%",
+    "reasoning": {
+        "dcf_analysis": {
+            "signal": "中立",
+            "reasoning": "实际dcf值: $nan, 市值: $3,490,451,250.00, Gap: nan%"
+        },
+        "owner_earnings_analysis": {
+            "signal": "看跌",
+            "reasoning": "Owner Earnings Value: $0.00, 市值: $3,490,451,250.00, Gap: -100.0%"
+        }
+    }
+}

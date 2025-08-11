@@ -1,1 +1,11 @@
-"{\"perspective\": \"\\u770b\\u6da8\", \"confidence\": 0.3, \"thesis_points\": [\"Technical indicators may be conservative, presenting buying opportunities\", \"Company fundamentals show potential for improvement\", \"Market sentiment may be overly pessimistic, creating value opportunities\", \"Current valuation may not fully reflect growth potential\"], \"reasoning\": \"Bullish thesis based on comprehensive analysis of technical, fundamental, sentiment, and valuation factors\"}"
+{
+    "perspective": "看涨",
+    "confidence": 0.3,
+    "thesis_points": [
+        "Technical indicators may be conservative, presenting buying opportunities",
+        "Company fundamentals show potential for improvement",
+        "Market sentiment may be overly pessimistic, creating value opportunities",
+        "Current valuation may not fully reflect growth potential"
+    ],
+    "reasoning": "Bullish thesis based on comprehensive analysis of technical, fundamental, sentiment, and valuation factors"
+}
