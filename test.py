@@ -8,8 +8,8 @@ from model import doubao_llm
 from workflow import app
 
 
-market = "sh"
-ticker = "600310"
+market = "sz"
+ticker = "002518"
 initial_state = {
     # "messages": [
     #     HumanMessage(content=f"请为以下股票提供详细分析，该股票代码为： {market + ticker}")

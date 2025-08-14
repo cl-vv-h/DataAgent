@@ -1,5 +1,5 @@
 {
-    "signal": "看跌",
-    "confidence": "50%",
-    "reasoning": "根据 4 条近期新闻分析，市场情绪分数为: -0.50"
+    "signal": "中立",
+    "confidence": "80%",
+    "reasoning": "根据 5 条近期新闻分析，市场情绪分数为: 0.20"
 }

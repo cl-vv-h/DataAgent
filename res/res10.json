@@ -1,43 +1,43 @@
 {
-    "signal": "中立",
-    "confidence": "16%",
+    "signal": "看涨",
+    "confidence": "33%",
     "strategy_signals": {
         "trend_following": {
-            "signal": "看跌",
-            "confidence": "22%",
+            "signal": "看涨",
+            "confidence": "37%",
             "metrics": {
-                "adx": 22.473425884802246,
-                "trend_strength": 0.22473425884802245
+                "adx": 37.180549017791364,
+                "trend_strength": 0.37180549017791364
             }
         },
         "mean_reversion": {
-            "signal": "中立",
-            "confidence": "50%",
+            "signal": "看跌",
+            "confidence": "60%",
             "metrics": {
-                "z_score": -0.10801577837291258,
-                "price_vs_bb": 0.4339257325161674,
-                "rsi_14": 38.09523809523808,
-                "rsi_28": 50.78125000000002
+                "z_score": 2.395225653116653,
+                "price_vs_bb": 0.9768119224453095,
+                "rsi_14": 68.09651474530834,
+                "rsi_28": 63.543191800878496
             }
         },
         "momentum": {
-            "signal": "中立",
-            "confidence": "50%",
+            "signal": "看涨",
+            "confidence": "40%",
             "metrics": {
-                "momentum_1m": -0.054610404945172775,
-                "momentum_3m": -0.0502633551014765,
-                "momentum_6m": 0.07427397007301506,
-                "volume_momentum": 0.7075814489409207
+                "momentum_1m": 0.1006783334844139,
+                "momentum_3m": 0.04104561703704379,
+                "momentum_6m": 0.09517230205800808,
+                "volume_momentum": 1.7410676391004423
             }
         },
         "volatility": {
-            "signal": "中立",
-            "confidence": "50%",
+            "signal": "看涨",
+            "confidence": "67%",
             "metrics": {
-                "historical_volatility": 0.19556717990367414,
-                "volatility_regime": 0.8641076511911725,
-                "volatility_z_score": -0.635914524009516,
-                "atr_ratio": 0.015834767641996525
+                "historical_volatility": 0.1810567183566472,
+                "volatility_regime": 0.7363371980518264,
+                "volatility_z_score": -1.9985721809966335,
+                "atr_ratio": 0.02493816982687548
             }
         },
         "statistical_arbitrage": {
@@ -45,8 +45,8 @@
             "confidence": "50%",
             "metrics": {
                 "hurst_exponent": 0.0,
-                "skewness": 0.41142382498434493,
-                "kurtosis": 2.1764336878856927
+                "skewness": 0.1513014413490113,
+                "kurtosis": 0.19725147838756082
             }
         }
     }

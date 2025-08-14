@@ -1,11 +1,37 @@
 {
-    "perspective": "看跌",
-    "confidence": 0.4,
-    "thesis_points": [
-        "Technical rally may be temporary, suggesting potential reversal",
-        "Concerning fundamentals with 50% confidence",
-        "Negative market sentiment with 50% confidence",
-        "Current valuation may not fully reflect downside risks"
+    "action": "看跌",
+    "confidence": 0.545,
+    "agent_signals": [
+        {
+            "agent": "短线分析",
+            "signal": "看跌",
+            "confidence": 0.7
+        },
+        {
+            "agent": "长线分析",
+            "signal": "看跌",
+            "confidence": 0.2
+        },
+        {
+            "agent": "技术分析",
+            "signal": "看涨",
+            "confidence": 0.33
+        },
+        {
+            "agent": "基本面分析",
+            "signal": "看涨",
+            "confidence": 0.5
+        },
+        {
+            "agent": "市场情绪分析",
+            "signal": "中立",
+            "confidence": 0.8
+        },
+        {
+            "agent": "估值分析",
+            "signal": "看跌",
+            "confidence": 1
+        }
     ],
-    "reasoning": "Bearish thesis based on comprehensive analysis of technical, fundamental, sentiment, and valuation factors"
+    "reasoning": "首先，风险管理无约束。估值分析置信度100%看跌，权重35%；基本面分析50%看涨，权重30%；技术分析33%看涨，权重25%；市场情绪分析80%中立，权重10%。综合计算，(1*0.35 + 0.5*0.3 + 0.33*0.25 + 0*0.1)=0.545，且估值分析看跌权重较大，所以整体决策为看跌。"
 }

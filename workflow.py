@@ -41,23 +41,25 @@ workflow.add_edge("market_data_agent", "fundamentals_agent")
 workflow.add_edge("market_data_agent", "sentiment_agent")
 workflow.add_edge("market_data_agent", "valuation_agent")
 
-# Analysts to Researchers
-workflow.add_edge("technical_analyst_agent", "researcher_bull_agent")
-workflow.add_edge("fundamentals_agent", "researcher_bull_agent")
-workflow.add_edge("sentiment_agent", "researcher_bull_agent")
-workflow.add_edge("valuation_agent", "researcher_bull_agent")
+# # Analysts to Researchers
+# workflow.add_edge("technical_analyst_agent", "researcher_bull_agent")
+# workflow.add_edge("fundamentals_agent", "researcher_bull_agent")
+# workflow.add_edge("sentiment_agent", "researcher_bull_agent")
+# workflow.add_edge("valuation_agent", "researcher_bull_agent")
 
-workflow.add_edge("technical_analyst_agent", "researcher_bear_agent")
-workflow.add_edge("fundamentals_agent", "researcher_bear_agent")
-workflow.add_edge("sentiment_agent", "researcher_bear_agent")
-workflow.add_edge("valuation_agent", "researcher_bear_agent")
+# workflow.add_edge("technical_analyst_agent", "researcher_bear_agent")
+# workflow.add_edge("fundamentals_agent", "researcher_bear_agent")
+# workflow.add_edge("sentiment_agent", "researcher_bear_agent")
+# workflow.add_edge("valuation_agent", "researcher_bear_agent")
 
-# Researchers to Debate Room
-workflow.add_edge("researcher_bull_agent", "debate_room_agent")
-workflow.add_edge("researcher_bear_agent", "debate_room_agent")
+# # Researchers to Debate Room
+# workflow.add_edge("researcher_bull_agent", "debate_room_agent")
+# workflow.add_edge("researcher_bear_agent", "debate_room_agent")
 
-# Debate Room to Risk Management
-workflow.add_edge("debate_room_agent", "portfolio_management_agent")
+# # Debate Room to Risk Management
+# workflow.add_edge("debate_room_agent", "portfolio_management_agent")
+
+workflow.add_edge(["short_term_agent", "long_term_agent", "technical_analyst_agent", "fundamentals_agent", "sentiment_agent", "valuation_agent"], "portfolio_management_agent")
 
 # Risk Management to Portfolio Management
 # workflow.add_edge("risk_management_agent", "portfolio_management_agent")

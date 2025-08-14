@@ -1,14 +1,14 @@
 {
-    "signal": "中立",
-    "confidence": "nan%",
+    "signal": "看跌",
+    "confidence": "100%",
     "reasoning": {
         "dcf_analysis": {
-            "signal": "中立",
-            "reasoning": "实际dcf值: $nan, 市值: $3,490,451,250.00, Gap: nan%"
+            "signal": "看跌",
+            "reasoning": "实际dcf值: $0.00, 市值: $15,254,297,463.00, Gap: -100.0%"
         },
         "owner_earnings_analysis": {
             "signal": "看跌",
-            "reasoning": "Owner Earnings Value: $0.00, 市值: $3,490,451,250.00, Gap: -100.0%"
+            "reasoning": "Owner Earnings Value: $0.00, 市值: $15,254,297,463.00, Gap: -100.0%"
         }
     }
 }
