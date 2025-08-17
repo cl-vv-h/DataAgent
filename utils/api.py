@@ -163,12 +163,12 @@ def get_financial_metrics(symbol: str) -> Dict[str, Any]:
             lg_data = ak.stock_a_indicator_lg(symbol=symbol)
             if lg_data is None or lg_data.empty:
                 logger.warning("No static market indicators available")
-                return [{}]
+                # return [{}]
             stock_data = lg_data.iloc[0]
             logger.info("✓ Static market indicators fetched")
         except Exception as e:
             logger.error(f"Error fetching static market indicators: {e}")
-            return [{}]
+            # return [{}]
 
         # 如果缺失市值数据，尝试用最近交易日数据计算
         if pd.isna(stock_data.get("总市值")) or stock_data.get("总市值", 0) == 0:

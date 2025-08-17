@@ -1,0 +1,54 @@
+<!--index.wxml-->
+<view class="container">
+  <view class="header">
+    <text class="title">股票分析助手</text>
+  </view>
+  
+  <view class="form-container">
+    <view class="form-item">
+      <text class="label">选择市场：</text>
+      <picker bindchange="onMarketChange" value="{{marketIndex}}" range="{{markets}}">
+        <view class="picker">
+          {{markets[marketIndex]}}
+        </view>
+      </picker>
+    </view>
+    
+    <view class="form-item">
+      <text class="label">股票代码：</text>
+      <input class="input" type="text" placeholder="请输入6位股票代码" value="{{ticker}}" bindinput="onTickerInput" maxlength="6" />
+    </view>
+    
+    <button class="submit-btn" bindtap="onSubmit" disabled="{{!ticker || ticker.length !== 6}}">
+      查询分析
+    </button>
+  </view>
+  
+  <view class="results-container" wx:if="{{analysisResults.length > 0}}">
+    <text class="results-title">分析结果 ({{analysisResults.length}}个)</text>
+    
+    <view class="result-item" wx:for="{{analysisResults}}" wx:key="index">
+      <view class="result-header">
+        <text class="signal {{item.signal === '看涨' ? 'bull' : 'bear'}}">{{item.signal}}</text>
+        <text class="confidence">置信度: {{item.confidence}}</text>
+      </view>
+      
+      <view class="reasoning-container">
+        <view class="reasoning-item" wx:for="{{item.reasoning}}" wx:key="key" wx:for-item="reasoning" wx:for-index="key">
+          <text class="reasoning-title">{{key === 'dcf_analysis' ? 'DCF分析' : '所有者收益分析'}}</text>
+          <text class="reasoning-signal {{reasoning.signal === '看涨' ? 'bull' : 'bear'}}">{{reasoning.signal}}</text>
+          <text class="reasoning-text">{{reasoning.reasoning}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <view class="loading" wx:if="{{isLoading}}">
+    <text>正在分析中...</text>
+  </view>
+  
+  <view class="error" wx:if="{{error}}">
+    <text class="error-text">{{error}}</text>
+  </view>
+</view>
+

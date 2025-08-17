@@ -9,7 +9,7 @@ from workflow import app
 
 
 market = "sz"
-ticker = "002518"
+ticker = "002557"
 initial_state = {
     # "messages": [
     #     HumanMessage(content=f"请为以下股票提供详细分析，该股票代码为： {market + ticker}")
@@ -28,12 +28,9 @@ initial_state = {
 print(f"Starting analysis for ticker: {ticker}")
 result = app.invoke(initial_state)
 
-i = 0
 for msg in result["messages"]:
-    print(msg.content)
-    with open(f"res{i}.json", 'w', encoding='utf-8') as f:
+    with open(f".//{ticker}//{msg.name}.json", 'w', encoding='utf-8') as f:
         import json
         data = json.dumps(msg.content)
         f.write(data)
         f.close()
-    i += 1
